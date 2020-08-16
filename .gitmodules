@@ -1,0 +1,6 @@
+[submodule "testdata/hyperledger-fabric-chaincode"]
+	path = testdata/hyperledger-fabric-chaincode
+	url = https://github.com/TommyStarK/hyperledger-fabric-chaincode
+[submodule "testdata/hyperledger-fabric-network"]
+	path = testdata/hyperledger-fabric-network
+	url = https://github.com/TommyStarK/hyperledger-fabric-network
