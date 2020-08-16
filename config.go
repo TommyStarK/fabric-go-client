@@ -11,11 +11,11 @@ import (
 )
 
 type Chaincode struct {
-	BuildDir string `json:"buildDir" yaml:"buildDir"`
-	Name     string `json:"name" yaml:"name"`
-	Path     string `json:"path" yaml:"path"`
-	Policy   string `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Version  string `json:"version" yaml:"version"`
+	// BuildDir string `json:"buildDir" yaml:"buildDir"`
+	Name    string `json:"name" yaml:"name"`
+	Path    string `json:"path" yaml:"path"`
+	Policy  string `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Version string `json:"version" yaml:"version"`
 }
 
 type Channel struct {

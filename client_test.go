@@ -45,6 +45,20 @@ func TestChannelResourceManagement(t *testing.T) {
 	}
 }
 
+func TestChaincodeShimAPI(t *testing.T) {
+	chaincode := defaultClient.Config().Chaincodes[0]
+	if err := defaultClient.InstallChaincode(chaincode); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChaincodeContractAPILifecycle(t *testing.T) {
+	// chaincode := defaultClient.Config().Chaincodes[1]
+	// if err := defaultClient.InstallChaincode(chaincode); err != nil {
+	// 	t.Fatal(err)
+	// }
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }

@@ -173,6 +173,7 @@ github.com/hyperledger/fabric-sdk-go/pkg/core/logging/metadata
 github.com/hyperledger/fabric-sdk-go/pkg/core/logging/modlog
 github.com/hyperledger/fabric-sdk-go/pkg/core/mocks
 github.com/hyperledger/fabric-sdk-go/pkg/fab
+github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager
 github.com/hyperledger/fabric-sdk-go/pkg/fab/channel
 github.com/hyperledger/fabric-sdk-go/pkg/fab/channel/membership
 github.com/hyperledger/fabric-sdk-go/pkg/fab/chconfig

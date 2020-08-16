@@ -69,3 +69,7 @@ func (client *Client) CreateChannel(channel Channel) error {
 func (client *Client) JoinChannel(channel Channel) error {
 	return client.resourceManager.joinChannel(channel)
 }
+
+func (client *Client) InstallChaincode(chaincode Chaincode) error {
+	return client.resourceManager.installChaincode(chaincode)
+}
