@@ -19,7 +19,7 @@ type Chaincode struct {
 }
 
 type Channel struct {
-	AnchorPeerConfigPath string `json:"anchorPeerConfigPath" yaml:"anchorPeerConfigPath"`
+	AnchorPeerConfigPath string `json:"anchorPeerConfigPath,omitempty" yaml:"anchorPeerConfigPath,omitempty"`
 	ConfigPath           string `json:"configPath" yaml:"configPath"`
 	Name                 string `json:"name" yaml:"name"`
 }

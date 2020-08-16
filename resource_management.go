@@ -16,9 +16,8 @@ import (
 )
 
 type resourceManager interface {
-	anchorPeerSetup(channel Channel) error
-	createChannel(channel Channel) error
-	joinChannel(channel Channel) error
+	saveChannel(channelID, channelConfigPath string) error
+	joinChannel(channelID string) error
 	installChaincode(chaincode Chaincode) error
 	// lifecycleInstallChaincode(chaincode Chaincode) error
 }
@@ -54,60 +53,30 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	return rsmClient, nil
 }
 
-func (rsm *resourceManagementClient) anchorPeerSetup(channel Channel) error {
+func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath string) error {
 	var request = resmgmt.SaveChannelRequest{
-		ChannelID:         channel.Name,
-		ChannelConfigPath: channel.AnchorPeerConfigPath,
+		ChannelID:         channelID,
+		ChannelConfigPath: channelConfigPath,
 		SigningIdentities: []mspprovider.SigningIdentity{rsm.adminIdentity},
 	}
 
-	result, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
+	if _, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyExists) {
-			return fmt.Errorf("failed to setup anchor peer for channel %s: %w", channel.Name, err)
+			return fmt.Errorf("failed to save channel %s (%s): %w", channelID, channelConfigPath, err)
 		}
-
-		return nil
-	}
-
-	if len(result.TransactionID) == 0 {
-		return fmt.Errorf("unexpected error occurred when setting up anchor peer for channel %s", channel.Name)
 	}
 
 	return nil
 }
 
-func (rsm *resourceManagementClient) createChannel(channel Channel) error {
-	var request = resmgmt.SaveChannelRequest{
-		ChannelID:         channel.Name,
-		ChannelConfigPath: channel.ConfigPath,
-		SigningIdentities: []mspprovider.SigningIdentity{rsm.adminIdentity},
-	}
-
-	result, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
-		if !strings.Contains(err.Error(), _channelAlreadyExists) {
-			return fmt.Errorf("failed to create channel %s: %w", channel.Name, err)
-		}
-
-		return nil
-	}
-
-	if len(result.TransactionID) == 0 {
-		return fmt.Errorf("unexpected error occurred when creating channel %s", channel.Name)
-	}
-
-	return nil
-}
-
-func (rsm *resourceManagementClient) joinChannel(channel Channel) error {
+func (rsm *resourceManagementClient) joinChannel(channelID string) error {
 	opts := make([]resmgmt.RequestOption, 0, 2)
 	opts = append(opts, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
 	opts = append(opts, resmgmt.WithTargets(rsm.peers...))
 
-	if err := rsm.client.JoinChannel(channel.Name, opts...); err != nil {
+	if err := rsm.client.JoinChannel(channelID, opts...); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyJoined) {
-			return fmt.Errorf("failed to join channel %s: %w", channel.Name, err)
+			return fmt.Errorf("failed to join channel %s: %w", channelID, err)
 		}
 
 		return nil
@@ -130,18 +99,44 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 		Package: ccPackage,
 	}
 
-	res, err := rsm.client.InstallCC(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	if err != nil {
-		return err
+	if _, err := rsm.client.InstallCC(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
+		return fmt.Errorf("failed to install chaincode %s (version: %s): %w", chaincode.Name, chaincode.Path, err)
 	}
 
-	if len(res) == 0 {
-		return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+	success := true
+	peers := make([]string, 0, len(rsm.peers))
+	for _, peer := range rsm.peers {
+		response, err := rsm.client.QueryInstalledChaincodes(resmgmt.WithTargets(peer))
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, chaincodeInfo := range response.Chaincodes {
+			if chaincodeInfo.Name == chaincode.Name && chaincodeInfo.Version == chaincode.Version {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			success = false
+			peers = append(peers, peer.URL())
+		}
 	}
 
-	if res[0].Status != 200 {
-		return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+	if !success {
+		return fmt.Errorf("failed to install chaincode %s (version: %s) on peers (%+v): %w",
+			chaincode.Name, chaincode.Path, strings.Join(peers, ", "), err)
 	}
+
+	// if len(res) == 0 {
+	// 	return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+	// }
+
+	// if res[0].Status != 200 {
+	// 	return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+	// }
 
 	return nil
 }

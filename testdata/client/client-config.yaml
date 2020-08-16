@@ -26,7 +26,7 @@ chaincodes:
   - name: fcacc
     # buildDir: testdata/hyperledger-fabric-chaincode/fcacc
     path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
-    policy: OR('Org1MSP.peer')
+    # policy: OR('Org1MSP.peer')
     version: 1.0
 # targetPeers:
 #   networkAdministration:

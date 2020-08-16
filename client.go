@@ -54,20 +54,16 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
-func (client *Client) AnchorPeerSetup(channel Channel) error {
-	return client.resourceManager.anchorPeerSetup(channel)
-}
-
 func (client *Client) Config() *Config {
 	return client.config
 }
 
-func (client *Client) CreateChannel(channel Channel) error {
-	return client.resourceManager.createChannel(channel)
+func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
+	return client.resourceManager.saveChannel(channelID, channelConfigPath)
 }
 
-func (client *Client) JoinChannel(channel Channel) error {
-	return client.resourceManager.joinChannel(channel)
+func (client *Client) JoinChannel(channelID string) error {
+	return client.resourceManager.joinChannel(channelID)
 }
 
 func (client *Client) InstallChaincode(chaincode Chaincode) error {
