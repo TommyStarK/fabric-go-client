@@ -65,22 +65,18 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 		SigningIdentities: []mspprovider.SigningIdentity{rsm.adminIdentity},
 	}
 
-	if _, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
-		if !strings.Contains(err.Error(), _channelAlreadyExists) {
-			return fmt.Errorf("failed to save channel %s (%s): %w", channelID, channelConfigPath, err)
-		}
+	_, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
+	if err != nil && !strings.Contains(err.Error(), _channelAlreadyExists) {
+		return fmt.Errorf("failed to save channel %s (%s): %w", channelID, channelConfigPath, err)
 	}
 
 	return nil
 }
 
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
-	if err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...); err != nil {
-		if !strings.Contains(err.Error(), _channelAlreadyJoined) {
-			return fmt.Errorf("failed to join channel %s: %w", channelID, err)
-		}
-
-		return nil
+	err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...)
+	if err != nil && !strings.Contains(err.Error(), _channelAlreadyJoined) {
+		return fmt.Errorf("failed to join channel %s: %w", channelID, err)
 	}
 
 	return nil
@@ -127,7 +123,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 	}
 
 	if !success {
-		return fmt.Errorf("failed to install chaincode %s (version: %s) on peers (%+v): %w",
+		return fmt.Errorf("failed to install chaincode %s (version: %s) on peers (%s): %w",
 			chaincode.Name, chaincode.Path, strings.Join(peers, ", "), err)
 	}
 
