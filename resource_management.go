@@ -25,6 +25,7 @@ type resourceManager interface {
 type resourceManagementClient struct {
 	adminIdentity mspprovider.SigningIdentity
 	client        *resmgmt.Client
+	defaultOpts   []resmgmt.RequestOption
 	peers         []fab.Peer
 }
 
@@ -47,7 +48,11 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	var rsmClient = &resourceManagementClient{
 		adminIdentity: identity,
 		client:        client,
-		peers:         peers,
+		defaultOpts: []resmgmt.RequestOption{
+			resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+			resmgmt.WithTargets(peers...),
+		},
+		peers: peers,
 	}
 
 	return rsmClient, nil
@@ -70,11 +75,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 }
 
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
-	opts := make([]resmgmt.RequestOption, 0, 2)
-	opts = append(opts, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-	opts = append(opts, resmgmt.WithTargets(rsm.peers...))
-
-	if err := rsm.client.JoinChannel(channelID, opts...); err != nil {
+	if err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyJoined) {
 			return fmt.Errorf("failed to join channel %s: %w", channelID, err)
 		}
@@ -99,7 +100,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 		Package: ccPackage,
 	}
 
-	if _, err := rsm.client.InstallCC(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
+	if _, err := rsm.client.InstallCC(request, rsm.defaultOpts...); err != nil {
 		return fmt.Errorf("failed to install chaincode %s (version: %s): %w", chaincode.Name, chaincode.Path, err)
 	}
 
