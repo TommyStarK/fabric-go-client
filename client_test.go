@@ -30,34 +30,21 @@ func TestMembershipServiceProvider(t *testing.T) {
 }
 
 func TestChannelResourceManagement(t *testing.T) {
-	channel := defaultClient.Config().Channels[0]
-
-	if err := defaultClient.SaveChannel(channel.Name, channel.ConfigPath); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := defaultClient.SaveChannel(channel.Name, channel.AnchorPeerConfigPath); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = defaultClient.JoinChannel(channel.Name); err != nil {
-		t.Fatal(err)
-	}
+	createUpdateAndJoinChannel(t, defaultClient)
+	chaincodeManagementFailureCases(t, defaultClient)
 }
 
-func TestChaincodeShimAPI(t *testing.T) {
-	chaincode := defaultClient.Config().Chaincodes[0]
-	if err := defaultClient.InstallChaincode(chaincode); err != nil {
-		t.Fatal(err)
-	}
+func TestChaincodeShimAPIManagement(t *testing.T) {
+	installChaincodeShimAPI(t, defaultClient)
+	chaincodeManagementFailureCases(t, defaultClient)
 }
 
-func TestChaincodeContractAPILifecycle(t *testing.T) {
-	// chaincode := defaultClient.Config().Chaincodes[1]
-	// if err := defaultClient.InstallChaincode(chaincode); err != nil {
-	// 	t.Fatal(err)
-	// }
-}
+// func TestChaincodeContractAPILifecycle(t *testing.T) {
+// 	chaincode := defaultClient.Config().Chaincodes[1]
+// 	if err := defaultClient.InstallChaincode(chaincode); err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())

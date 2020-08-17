@@ -24,7 +24,7 @@ func newMembershipServiceProvider(organization string, ctx context.ClientProvide
 		return nil, err
 	}
 
-	var mspclient = &membershipServiceClient{
+	mspclient := &membershipServiceClient{
 		client: client,
 	}
 

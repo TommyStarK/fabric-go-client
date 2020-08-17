@@ -44,7 +44,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	var client = &Client{
+	client := &Client{
 		config:          cfg,
 		fabricSDK:       sdk,
 		msp:             msp,
@@ -68,4 +68,16 @@ func (client *Client) JoinChannel(channelID string) error {
 
 func (client *Client) InstallChaincode(chaincode Chaincode) error {
 	return client.resourceManager.installChaincode(chaincode)
+}
+
+func (client *Client) IsChaincodeInstalled(chaincodeName string) bool {
+	return client.resourceManager.isChaincodeInstalled(chaincodeName)
+}
+
+func (client *Client) IsChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion string) bool {
+	return client.resourceManager.isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion)
+}
+
+func (client *Client) InstanciateOrUpgradeChaincode(channelID string, chaincode Chaincode) error {
+	return client.resourceManager.instantiateOrUpgradeChaincode(channelID, chaincode)
 }

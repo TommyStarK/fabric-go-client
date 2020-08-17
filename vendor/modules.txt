@@ -63,6 +63,7 @@ github.com/hashicorp/hcl/json/token
 # github.com/hyperledger/fabric-lib-go v1.0.0
 github.com/hyperledger/fabric-lib-go/healthz
 # github.com/hyperledger/fabric-protos-go v0.0.0-20191121202242-f5500d5e3e85
+## explicit
 github.com/hyperledger/fabric-protos-go/common
 github.com/hyperledger/fabric-protos-go/discovery
 github.com/hyperledger/fabric-protos-go/gossip
@@ -225,6 +226,8 @@ github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/rollingcounter
 github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar
 github.com/hyperledger/fabric-sdk-go/pkg/util/test
 github.com/hyperledger/fabric-sdk-go/test/metadata
+github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl
+github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/internal/protoutil
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 github.com/kr/logfmt
 # github.com/magiconair/properties v1.7.6

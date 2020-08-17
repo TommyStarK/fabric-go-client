@@ -11,11 +11,11 @@ import (
 )
 
 type Chaincode struct {
-	// BuildDir string `json:"buildDir" yaml:"buildDir"`
-	Name    string `json:"name" yaml:"name"`
-	Path    string `json:"path" yaml:"path"`
-	Policy  string `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Version string `json:"version" yaml:"version"`
+	InitArgs []string `json:"initArgs" yaml:"initArgs"`
+	Name     string   `json:"name" yaml:"name"`
+	Path     string   `json:"path" yaml:"path"`
+	Policy   string   `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Version  string   `json:"version" yaml:"version"`
 }
 
 type Channel struct {
@@ -35,19 +35,13 @@ type Identities struct {
 	Users []Identity `json:"users" yaml:"users"`
 }
 
-// type TargetPeers struct {
-// 	NetworkAdministration []string `json:"networkAdministration" yaml:"networkAdministration"`
-// 	Transactions          []string `json:"transactions" yaml:"transactions"`
-// }
-
 type Config struct {
-	Chaincodes   []Chaincode `json:"chaincodes" yaml:"chaincodes"`
-	Channels     []Channel   `json:"channels" yaml:"channels"`
-	Identities   Identities  `json:"identities" yaml:"identities"`
-	Organization string      `json:"organization" yaml:"organization"`
-	// TargetPeers   TargetPeers `json:"targetPeers,omitempty" yaml:"targetPeers,omitempty"`
-	SDKConfigPath string `json:"sdkConfigPath" yaml:"sdkConfigPath"`
-	Version       string `json:"version" yaml:"version"`
+	Chaincodes    []Chaincode `json:"chaincodes" yaml:"chaincodes"`
+	Channels      []Channel   `json:"channels" yaml:"channels"`
+	Identities    Identities  `json:"identities" yaml:"identities"`
+	Organization  string      `json:"organization" yaml:"organization"`
+	SDKConfigPath string      `json:"sdkConfigPath" yaml:"sdkConfigPath"`
+	Version       string      `json:"version" yaml:"version"`
 }
 
 func NewConfigFromFile(configPath string) (*Config, error) {
