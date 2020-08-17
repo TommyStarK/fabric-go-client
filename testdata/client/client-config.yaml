@@ -19,17 +19,13 @@ channels:
     configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channel12.tx
 chaincodes:
   - name: sacc
-    # buildDir: testdata/hyperledger-fabric-chaincode/sacc
     path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/sacc
     policy: OR('Org1MSP.peer')
     version: 1.0
+    initArgs:
+      - init
   - name: fcacc
-    # buildDir: testdata/hyperledger-fabric-chaincode/fcacc
     path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
-    # policy: OR('Org1MSP.peer')
     version: 1.0
-# targetPeers:
-#   networkAdministration:
-#     - peer0.org1.dummy.com
-#   transactions:
-#     - peer0.org1.dummy.com
+    initArgs:
+      - Init

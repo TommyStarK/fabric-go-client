@@ -44,7 +44,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	var client = &Client{
+	client := &Client{
 		config:          cfg,
 		fabricSDK:       sdk,
 		msp:             msp,
@@ -64,8 +64,4 @@ func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 
 func (client *Client) JoinChannel(channelID string) error {
 	return client.resourceManager.joinChannel(channelID)
-}
-
-func (client *Client) InstallChaincode(chaincode Chaincode) error {
-	return client.resourceManager.installChaincode(chaincode)
 }
