@@ -231,6 +231,7 @@ orderers:
     tlsCACerts:
       # Certificate location absolute path
       path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config/ordererOrganizations/dummy.com/tlsca/tlsca.dummy.com-cert.pem
+
 #
 # List of peers to send various requests to, including endorsement, query
 # and event listener registration.
