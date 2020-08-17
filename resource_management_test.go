@@ -24,8 +24,8 @@ func createUpdateAndJoinChannel(t *testing.T, client *Client) {
 func channelManagementFailureCases(t *testing.T, client *Client) {
 	channel := client.Config().Channels[0]
 
-	if err := client.SaveChannel(channel.Name, channel.ConfigPath); err == nil {
-		t.Logf("channel %s already exists, should have returned an error", channel.Name)
+	if err := client.SaveChannel(channel.Name, channel.ConfigPath); err != nil {
+		t.Logf("channel %s already exists, should not have returned an error", channel.Name)
 		t.Fail()
 	}
 

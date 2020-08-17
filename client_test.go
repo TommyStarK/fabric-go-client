@@ -31,7 +31,7 @@ func TestMembershipServiceProvider(t *testing.T) {
 
 func TestChannelResourceManagement(t *testing.T) {
 	createUpdateAndJoinChannel(t, defaultClient)
-	chaincodeManagementFailureCases(t, defaultClient)
+	channelManagementFailureCases(t, defaultClient)
 }
 
 func TestChaincodeShimAPIManagement(t *testing.T) {
