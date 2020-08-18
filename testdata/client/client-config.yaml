@@ -5,11 +5,11 @@ identities:
   admin:
     username: Admin
     certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/signcerts/Admin@org1.dummy.com-cert.pem
-    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/keystore/priv_sk
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/keystore/74a895e8d55455ea43515f173c1feb1e5653443031fac174cc07ca838e86b078_sk
   users:
   - username: User1
     certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/signcerts/User1@org1.dummy.com-cert.pem
-    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/keystore/priv_sk
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/keystore/cf09d297de533320b4a1b06e114dcce00b875943758dea613201be91bb1f77f5_sk
 channels:
   - name: channelall
     anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channelall.tx
@@ -24,8 +24,3 @@ chaincodes:
     version: 1.0
     initArgs:
       - init
-  - name: fcacc
-    path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
-    version: 1.0
-    initArgs:
-      - Init
