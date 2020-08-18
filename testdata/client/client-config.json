@@ -6,13 +6,13 @@
      "admin": {
         "username": "Admin",
         "certificate": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/signcerts/Admin@org1.dummy.com-cert.pem",
-        "privateKey": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/keystore/74a895e8d55455ea43515f173c1feb1e5653443031fac174cc07ca838e86b078_sk"
+        "privateKey": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/keystore/e0d98e7bdd10d4d6fd3d86275111d3ac4dc9bc538dd96afd72d16db6054e62e8_sk"
      },
      "users": [
         {
            "username": "User1",
            "certificate": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/signcerts/User1@org1.dummy.com-cert.pem",
-           "privateKey": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/keystore/cf09d297de533320b4a1b06e114dcce00b875943758dea613201be91bb1f77f5_sk"
+           "privateKey": "./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/keystore/bd80cf07206710f95ad0208effca64abfde55c6884df2da886915e14770bfaa9_sk"
         }
      ]
   },
