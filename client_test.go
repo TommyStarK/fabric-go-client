@@ -6,9 +6,8 @@ import (
 )
 
 var (
-	defaultClient *Client
-	defaultConfig *Config
-	err           error
+	org1client *Client
+	err        error
 )
 
 func TestNewClient(t *testing.T) {
@@ -17,21 +16,19 @@ func TestNewClient(t *testing.T) {
 		t.Fail()
 	}
 
-	defaultClient, err = NewClientFromConfigFile("./testdata/client/client-config.yaml")
+	org1client, err = NewClientFromConfigFile("./testdata/client/client-config.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	defaultConfig = defaultClient.Config()
 }
 
 func TestMembershipServiceProvider(t *testing.T) {
-	testMembershipServiceProvider(t, defaultClient.msp, defaultConfig)
+	testMembershipServiceProvider(t, org1client.msp, org1client.Config())
 }
 
 func TestChannelResourceManagement(t *testing.T) {
-	createUpdateAndJoinChannel(t, defaultClient)
-	channelManagementFailureCases(t, defaultClient)
+	createUpdateAndJoinChannel(t, org1client)
+	channelManagementFailureCases(t, org1client)
 }
 
 func TestMain(m *testing.M) {

@@ -10,38 +10,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Chaincode struct {
-	InitArgs []string `json:"initArgs" yaml:"initArgs"`
-	Name     string   `json:"name" yaml:"name"`
-	Path     string   `json:"path" yaml:"path"`
-	Policy   string   `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Version  string   `json:"version" yaml:"version"`
-}
-
-type Channel struct {
-	AnchorPeerConfigPath string `json:"anchorPeerConfigPath,omitempty" yaml:"anchorPeerConfigPath,omitempty"`
-	ConfigPath           string `json:"configPath" yaml:"configPath"`
-	Name                 string `json:"name" yaml:"name"`
-}
-
-type Identity struct {
-	Certificate string `json:"certificate" yaml:"certificate"`
-	PrivateKey  string `json:"privateKey" yaml:"privateKey"`
-	Username    string `json:"username" yaml:"username"`
-}
-
-type Identities struct {
-	Admin Identity   `json:"admin" yaml:"admin"`
-	Users []Identity `json:"users" yaml:"users"`
-}
-
 type Config struct {
-	Chaincodes    []Chaincode `json:"chaincodes" yaml:"chaincodes"`
-	Channels      []Channel   `json:"channels" yaml:"channels"`
-	Identities    Identities  `json:"identities" yaml:"identities"`
-	Organization  string      `json:"organization" yaml:"organization"`
-	SDKConfigPath string      `json:"sdkConfigPath" yaml:"sdkConfigPath"`
-	Version       string      `json:"version" yaml:"version"`
+	Chaincodes []Chaincode `json:"chaincodes" yaml:"chaincodes"`
+	Channels   []Channel   `json:"channels" yaml:"channels"`
+	Identities struct {
+		Admin Identity   `json:"admin" yaml:"admin"`
+		Users []Identity `json:"users" yaml:"users"`
+	} `json:"identities" yaml:"identities"`
+	Organization  string `json:"organization" yaml:"organization"`
+	SDKConfigPath string `json:"sdkConfigPath" yaml:"sdkConfigPath"`
+	Version       string `json:"version" yaml:"version"`
 }
 
 func NewConfigFromFile(configPath string) (*Config, error) {
