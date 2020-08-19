@@ -201,7 +201,7 @@ func (rsm *resourceManagementClient) instantiateChaincode(channelID string, chai
 		Name:    chaincode.Name,
 		Path:    chaincode.Path,
 		Version: chaincode.Version,
-		Args:    convertChaincodeInitArgs(chaincode.InitArgs),
+		Args:    convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs),
 		Policy:  policy,
 	}
 
@@ -227,7 +227,7 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 		Name:    chaincode.Name,
 		Path:    chaincode.Path,
 		Version: chaincode.Version,
-		Args:    convertChaincodeInitArgs(chaincode.InitArgs),
+		Args:    convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs),
 		Policy:  policy,
 	}
 
@@ -343,14 +343,6 @@ func (rsm *resourceManagementClient) isChaincodeInstantiated(channelID, chaincod
 		default:
 		}
 	}
-}
-
-func convertChaincodeInitArgs(args []string) [][]byte {
-	res := make([][]byte, 0, len(args))
-	for _, arg := range args {
-		res = append(res, []byte(arg))
-	}
-	return res
 }
 
 func parseChaincodePolicy(chaincodePolicy string) (*common.SignaturePolicyEnvelope, error) {

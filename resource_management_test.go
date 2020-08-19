@@ -1,7 +1,6 @@
 package fabclient
 
 import (
-	"bytes"
 	"testing"
 )
 
@@ -55,7 +54,7 @@ func installChaincodeShimAPI(t *testing.T, client *Client) {
 	}
 
 	channelID := client.Config().Channels[0].Name
-	if err := client.InstanciateOrUpgradeChaincode(channelID, chaincode); err != nil {
+	if err := client.InstantiateOrUpgradeChaincode(channelID, chaincode); err != nil {
 		t.Fatal(err)
 	}
 
@@ -69,7 +68,7 @@ func installChaincodeShimAPI(t *testing.T, client *Client) {
 		t.Fatal(err)
 	}
 
-	if err := client.InstanciateOrUpgradeChaincode(channelID, chaincode); err != nil {
+	if err := client.InstantiateOrUpgradeChaincode(channelID, chaincode); err != nil {
 		t.Fatal(err)
 	}
 
@@ -95,7 +94,7 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 	}
 
 	channelID := client.Config().Channels[0].Name
-	if err := client.InstanciateOrUpgradeChaincode(channelID, chaincode); err == nil {
+	if err := client.InstantiateOrUpgradeChaincode(channelID, chaincode); err == nil {
 		t.Log("should have failed, chaincode not installed")
 		t.Fail()
 	}
@@ -103,25 +102,5 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 	if client.IsChaincodeInstantiated(channelID, chaincode.Name, chaincode.Version) {
 		t.Logf("chaincode %s should not be instantiated on all peers belonging to org MSP", chaincode.Name)
 		t.Fail()
-	}
-}
-
-func TestConvertChaincodeInitArgs(t *testing.T) {
-	witness := [][]byte{
-		[]byte("init"),
-		[]byte("a"),
-		[]byte("b"),
-	}
-
-	test := convertChaincodeInitArgs([]string{"init", "a", "b"})
-
-	if len(witness) != len(test) {
-		t.Fail()
-	}
-
-	for i := range witness {
-		if bytes.Compare(witness[i], test[i]) != 0 {
-			t.Fatalf("should be %+v but got %+v", witness[i], test[i])
-		}
 	}
 }

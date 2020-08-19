@@ -147,6 +147,7 @@ github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/options
 github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/balancedsorter
 github.com/hyperledger/fabric-sdk-go/pkg/client/common/selection/sorter/blockheightsorter
 github.com/hyperledger/fabric-sdk-go/pkg/client/common/verifier
+github.com/hyperledger/fabric-sdk-go/pkg/client/ledger
 github.com/hyperledger/fabric-sdk-go/pkg/client/msp
 github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt
 github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi
