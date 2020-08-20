@@ -5,24 +5,6 @@ import (
 	"time"
 )
 
-func TestOptionsWithChaincodeID(t *testing.T) {
-	opts := &options{
-		chaincodeID: "",
-	}
-
-	opt := WithChaincodeID("chaincodeID")
-
-	if opt == nil {
-		t.Fail()
-	}
-
-	opt.apply(opts)
-
-	if opts.chaincodeID != "chaincodeID" {
-		t.Fail()
-	}
-}
-
 func TestOptionsWithChannelID(t *testing.T) {
 	opts := &options{
 		channelID: "",

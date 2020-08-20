@@ -3,7 +3,6 @@ package fabclient
 import "time"
 
 type options struct {
-	chaincodeID            string
 	channelID              string
 	ordererResponseTimeout time.Duration
 	userIdentity           string
@@ -17,12 +16,6 @@ type optionFunc func(*options)
 
 func (f optionFunc) apply(o *options) {
 	f(o)
-}
-
-func WithChaincodeID(chaincodeID string) Option {
-	return optionFunc(func(o *options) {
-		o.chaincodeID = chaincodeID
-	})
 }
 
 func WithChannelID(channelID string) Option {
