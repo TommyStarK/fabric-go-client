@@ -3,6 +3,7 @@ package fabclient
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -27,12 +28,12 @@ func (hls handlers) find(username string) channelHandler {
 
 type channelHandlers struct {
 	channelName string
-	handlers    *handlers
+	handlers    handlers
 }
 
 type channelsHandlers []channelHandlers
 
-func (chls channelsHandlers) find(channelName string) *handlers {
+func (chls channelsHandlers) find(channelName string) handlers {
 	for _, c := range chls {
 		if c.channelName == channelName {
 			return c.handlers
@@ -48,6 +49,8 @@ type Client struct {
 	msp              membershipServiceProvider
 	resourceManager  resourceManager
 	channelsHandlers channelsHandlers
+
+	mutex sync.RWMutex
 }
 
 func NewClientFromConfigFile(configPath string) (*Client, error) {
@@ -82,48 +85,53 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	chansHandlers := make(channelsHandlers, 0)
-	for _, channel := range cfg.Channels {
-		if chansHandlers.find(channel.Name) == nil {
-			hls := make(handlers, 0)
-			chansHandlers = append(chansHandlers, channelHandlers{
-				channelName: channel.Name,
-				handlers:    &hls,
-			})
-		}
-
-		for _, user := range cfg.Identities.Users {
-			chanHandlers := chansHandlers.find(channel.Name)
-			if chanHandlers.find(user.Username) == nil {
-				userIdentity, err := msp.createSigningIdentity(user.Certificate, user.PrivateKey)
-				if err != nil {
-
-				}
-
-				userContext := sdk.ChannelContext(channel.Name, fabsdk.WithIdentity(userIdentity))
-
-				chHandler, err := newChannelHandler(userContext)
-				if err != nil {
-
-				}
-
-				*chanHandlers = append(*chanHandlers, handler{
-					username: user.Username,
-					handler:  chHandler,
-				})
-			}
-		}
-	}
-
 	client := &Client{
 		config:           cfg,
 		fabricSDK:        sdk,
 		msp:              msp,
 		resourceManager:  rsm,
-		channelsHandlers: chansHandlers,
+		channelsHandlers: make(channelsHandlers, 0, len(cfg.Channels)),
+		mutex:            sync.RWMutex{},
 	}
 
 	return client, nil
+}
+
+// BindChannelToClient should be call once the peer joined a channel
+func (client *Client) BindChannelToClient(channelID string) error {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+
+	if handlers := client.channelsHandlers.find(channelID); handlers != nil {
+		return fmt.Errorf("channel %s already bound", channelID)
+	}
+
+	handlers := make(handlers, 0, len(client.config.Identities.Users))
+	for _, user := range client.config.Identities.Users {
+		userIdentity, err := client.msp.createSigningIdentity(user.Certificate, user.PrivateKey)
+		if err != nil {
+			return err
+		}
+
+		userContext := client.fabricSDK.ChannelContext(channelID, fabsdk.WithIdentity(userIdentity))
+
+		chHandler, err := newChannelHandler(userContext)
+		if err != nil {
+			return err
+		}
+
+		handlers = append(handlers, handler{
+			username: user.Username,
+			handler:  chHandler,
+		})
+	}
+
+	client.channelsHandlers = append(client.channelsHandlers, channelHandlers{
+		channelName: channelID,
+		handlers:    handlers,
+	})
+
+	return nil
 }
 
 func (client *Client) Config() *Config {
@@ -154,7 +162,26 @@ func (client *Client) IsChaincodeInstantiated(channelID, chaincodeName, chaincod
 	return client.resourceManager.isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion)
 }
 
+func (client *Client) Invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.invoke(request, opts...)
+}
+
+func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.invoke(request, opts...)
+}
+
 func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, error) {
+	client.mutex.RLock()
+	defer client.mutex.RUnlock()
+
 	options := &options{
 		channelID:    "",
 		userIdentity: "",
@@ -168,16 +195,14 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 		return nil, errors.New("no channel ID specified")
 	}
 
-	if len(options.channelID) == 0 && len(client.channelsHandlers) == 1 {
+	if len(options.channelID) == 0 {
 		if len(options.userIdentity) == 0 {
-			handlers := *client.channelsHandlers[0].handlers
-			return handlers[0].handler, nil
+			return client.channelsHandlers[0].handlers[0].handler, nil
 		}
 
-		handlers := *client.channelsHandlers[0].handlers
-		handler := handlers.find(options.userIdentity)
+		handler := client.channelsHandlers[0].handlers.find(options.userIdentity)
 		if handler == nil {
-			return nil, fmt.Errorf("handler")
+			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
 		}
 
 		return handler, nil
@@ -185,18 +210,17 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 
 	chanHandlers := client.channelsHandlers.find(options.channelID)
 	if chanHandlers == nil {
-		return nil, fmt.Errorf("handlers for channel %s not found", options.channelID)
+		return nil, fmt.Errorf("binding for channel %s not found", options.channelID)
 	}
 
 	if len(options.userIdentity) > 0 {
 		handler := chanHandlers.find(options.userIdentity)
 		if handler == nil {
-			return nil, fmt.Errorf("handler for channel %s with user %s not found", options.channelID, options.userIdentity)
+			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
 		}
 
 		return handler, nil
 	}
 
-	handlers := *chanHandlers
-	return handlers[0].handler, nil
+	return chanHandlers[0].handler, nil
 }

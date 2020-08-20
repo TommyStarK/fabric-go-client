@@ -22,44 +22,6 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
-func TestSelectChannelHandler(t *testing.T) {
-	handler, err := org1client.selectChannelHandler(WithChannelID("channelall"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if handler == nil {
-		t.Fail()
-	}
-
-	handler, err = org1client.selectChannelHandler(WithChannelID("channel12"), WithUserIdentity("User1"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if handler == nil {
-		t.Fail()
-	}
-
-	handler, err = org1client.selectChannelHandler(WithChannelID("channel12"), WithUserIdentity("foo"))
-	if err == nil {
-		t.Fail()
-	}
-
-	if handler != nil {
-		t.Fail()
-	}
-
-	handler, err = org1client.selectChannelHandler()
-	if err == nil {
-		t.Fail()
-	}
-
-	if handler != nil {
-		t.Fail()
-	}
-}
-
 func TestMembershipServiceProvider(t *testing.T) {
 	testMembershipServiceProvider(t, org1client.msp, org1client.Config())
 }
@@ -69,17 +31,60 @@ func TestChannelResourceManagement(t *testing.T) {
 	channelManagementFailureCases(t, org1client)
 }
 
+func TestBindChannelToClient(t *testing.T) {
+	if err := org1client.BindChannelToClient(org1client.Config().Channels[0].Name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSelectChannelHandler(t *testing.T) {
+	handler, err := org1client.selectChannelHandler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("User1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("foo"))
+	if err == nil {
+		t.Fail()
+	}
+
+	if handler != nil {
+		t.Fail()
+	}
+
+}
+
 func TestChaincodeShimAPIManagement(t *testing.T) {
 	installChaincodeShimAPI(t, org1client)
 	chaincodeManagementFailureCases(t, org1client)
 }
 
-// func TestChaincodeContractAPILifecycle(t *testing.T) {
-// 	chaincode := org1client.Config().Chaincodes[1]
-// 	if err := org1client.InstallChaincode(chaincode); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+func TestChaincodeOperations(t *testing.T) {
+	storeNewAssetToLedger(t, org1client)
+	getAssetFromLedger(t, org1client)
+}
 
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())

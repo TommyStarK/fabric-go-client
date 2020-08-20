@@ -28,6 +28,11 @@ type Chaincode struct {
 	Version  string   `json:"version" yaml:"version"`
 }
 
+type ChaincodeCall struct {
+	ID          string
+	Collections []string
+}
+
 type ChaincodeEvent struct {
 	TxID        string
 	ChaincodeID string
@@ -35,6 +40,14 @@ type ChaincodeEvent struct {
 	Payload     []byte
 	BlockNumber uint64
 	SourceURL   string
+}
+
+type ChaincodeRequest struct {
+	ChaincodeID     string
+	Function        string
+	Args            []string
+	TransientMap    map[string][]byte
+	InvocationChain []*ChaincodeCall
 }
 
 type Channel struct {
@@ -47,4 +60,10 @@ type Identity struct {
 	Certificate string `json:"certificate" yaml:"certificate"`
 	PrivateKey  string `json:"privateKey" yaml:"privateKey"`
 	Username    string `json:"username" yaml:"username"`
+}
+
+type TransactionResponse struct {
+	Payload       []byte
+	Status        int32
+	TransactionID string
 }
