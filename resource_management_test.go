@@ -11,6 +11,10 @@ func createUpdateAndJoinChannel(t *testing.T, client *Client) {
 		t.Fatal(err)
 	}
 
+	if err := client.SaveChannel(channel.Name, channel.ConfigPath); err != nil {
+		t.Errorf("channel '%s' already exists, should not have returned an error: %w", channel.Name, err)
+	}
+
 	if err := client.SaveChannel(channel.Name, channel.AnchorPeerConfigPath); err != nil {
 		t.Fatal(err)
 	}
@@ -22,23 +26,15 @@ func createUpdateAndJoinChannel(t *testing.T, client *Client) {
 
 func channelManagementFailureCases(t *testing.T, client *Client) {
 	channel := client.Config().Channels[0]
-
-	if err := client.SaveChannel(channel.Name, channel.ConfigPath); err != nil {
-		t.Logf("channel %s already exists, should not have returned an error", channel.Name)
-		t.Fail()
-	}
-
 	channel.Name = "dummy"
 	channel.ConfigPath = "/dummy"
 
 	if err := client.SaveChannel(channel.Name, channel.ConfigPath); err == nil {
-		t.Log("should have returned a non nil error")
-		t.Fail()
+		t.Error("should have returned an error, we provided a wrong channel configuration path")
 	}
 
 	if err := client.JoinChannel(channel.Name); err == nil {
-		t.Log("should have returned a non nil error")
-		t.Fail()
+		t.Error("should have returned an error, channel 'dummy' does not exist")
 	}
 }
 
@@ -49,8 +45,7 @@ func installChaincodeShimAPI(t *testing.T, client *Client) {
 	}
 
 	if !client.IsChaincodeInstalled(chaincode.Name) {
-		t.Logf("chaincode %s should be installed on all peers belonging to org MSP", chaincode.Name)
-		t.Fail()
+		t.Errorf("chaincode '%s' should be installed on all peers belonging to org MSP", chaincode.Name)
 	}
 
 	channelID := client.Config().Channels[0].Name
@@ -59,8 +54,7 @@ func installChaincodeShimAPI(t *testing.T, client *Client) {
 	}
 
 	if !client.IsChaincodeInstantiated(channelID, chaincode.Name, chaincode.Version) {
-		t.Logf("chaincode %s should be instantiated on all peers belonging to org MSP", chaincode.Name)
-		t.Fail()
+		t.Errorf("chaincode '%s' should be instantiated on all peers belonging to org MSP", chaincode.Name)
 	}
 
 	chaincode.Version = "2.0"
@@ -73,8 +67,7 @@ func installChaincodeShimAPI(t *testing.T, client *Client) {
 	}
 
 	if !client.IsChaincodeInstantiated(channelID, chaincode.Name, chaincode.Version) {
-		t.Logf("chaincode %s should have been upgraded on all peers belonging to org MSP", chaincode.Name)
-		t.Fail()
+		t.Errorf("chaincode '%s' should have been upgraded on all peers belonging to org MSP", chaincode.Name)
 	}
 }
 
@@ -84,23 +77,19 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 	chaincode.Path = "/dummy"
 
 	if err := client.InstallChaincode(chaincode); err == nil {
-		t.Log("should have failed, invalid chaincode path provided")
-		t.Fail()
+		t.Error("should have returned an error, invalid chaincode path provided")
 	}
 
 	if client.IsChaincodeInstalled(chaincode.Name) {
-		t.Logf("chaincode %s should not be installed on all peers belonging to org MSP", chaincode.Name)
-		t.Fail()
+		t.Errorf("chaincode '%s' should not be installed on all peers belonging to org MSP", chaincode.Name)
 	}
 
 	channelID := client.Config().Channels[0].Name
 	if err := client.InstantiateOrUpgradeChaincode(channelID, chaincode); err == nil {
-		t.Log("should have failed, chaincode not installed")
-		t.Fail()
+		t.Error("should have returned an error, chaincode not installed")
 	}
 
 	if client.IsChaincodeInstantiated(channelID, chaincode.Name, chaincode.Version) {
-		t.Logf("chaincode %s should not be instantiated on all peers belonging to org MSP", chaincode.Name)
-		t.Fail()
+		t.Errorf("chaincode '%s' should not be instantiated on all peers belonging to org MSP", chaincode.Name)
 	}
 }
