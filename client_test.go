@@ -12,8 +12,7 @@ var (
 
 func TestNewClient(t *testing.T) {
 	if _, err := NewClientFromConfigFile("./go.mod"); err == nil {
-		t.Log("should have failed: path towards a not supported extension file")
-		t.Fail()
+		t.Error("should have returned an error, path towards a not supported extension file")
 	}
 
 	org1client, err = NewClientFromConfigFile("./testdata/client/client-config.yaml")
@@ -29,45 +28,36 @@ func TestMembershipServiceProvider(t *testing.T) {
 func TestChannelResourceManagement(t *testing.T) {
 	createUpdateAndJoinChannel(t, org1client)
 	channelManagementFailureCases(t, org1client)
-}
 
-func TestSelectChannelHandler(t *testing.T) {
 	handler, err := org1client.selectChannelHandler()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if handler == nil {
+	if err != nil || handler == nil {
 		t.Fail()
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"))
-	if err != nil {
-		t.Fatal(err)
+	if err != nil || handler == nil {
+		t.Fail()
 	}
 
-	if handler == nil {
+	handler, err = org1client.selectChannelHandler(WithUserIdentity("User1"))
+	if err != nil || handler == nil {
 		t.Fail()
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("User1"))
-	if err != nil {
-		t.Fatal(err)
+	if err != nil || handler == nil {
+		t.Fail()
 	}
 
-	if handler == nil {
+	handler, err = org1client.selectChannelHandler(WithChannelID("dummy"))
+	if err == nil || handler != nil {
 		t.Fail()
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("foo"))
-	if err == nil {
+	if err == nil || handler != nil {
 		t.Fail()
 	}
-
-	if handler != nil {
-		t.Fail()
-	}
-
 }
 
 func TestChaincodeShimAPIManagement(t *testing.T) {
@@ -76,8 +66,12 @@ func TestChaincodeShimAPIManagement(t *testing.T) {
 }
 
 func TestChaincodeOperations(t *testing.T) {
-	storeNewAssetToLedger(t, org1client)
-	getAssetFromLedger(t, org1client)
+	writeToLedger(t, org1client)
+	readFromLedger(t, org1client)
+	queryBlockByTxID(t, org1client)
+	registerChaincodeEvent(t, org1client)
+	chaincodeEventTimeout(t, org1client)
+	chaincodeOpsFailureCases(t, org1client)
 }
 
 func TestMain(m *testing.M) {
