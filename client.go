@@ -68,7 +68,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		return nil, err
 	}
 
-	msp, err := newMembershipServiceProvider(cfg.Organization, sdk.Context())
+	msp, err := newMembershipServiceProvider(sdk.Context(), cfg.Organization)
 	if err != nil {
 		return nil, err
 	}
@@ -134,14 +134,17 @@ func (client *Client) bindChannel(channelID string) error {
 	return nil
 }
 
+// Config returns the client configuration
 func (client *Client) Config() *Config {
 	return client.config
 }
 
+// SaveChannel creates or updates channel.
 func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 	return client.resourceManager.saveChannel(channelID, channelConfigPath)
 }
 
+// JoinChannel allows for peers to join existing channel
 func (client *Client) JoinChannel(channelID string) error {
 	if err := client.resourceManager.joinChannel(channelID); err != nil {
 		return err
@@ -150,22 +153,27 @@ func (client *Client) JoinChannel(channelID string) error {
 	return client.bindChannel(channelID)
 }
 
+// InstallChaincode allows administrators to install chaincode onto the filesystem of a peer.
 func (client *Client) InstallChaincode(chaincode Chaincode) error {
 	return client.resourceManager.installChaincode(chaincode)
 }
 
+// InstantiateOrUpgradeChaincode instantiates or upgrades chaincode.
 func (client *Client) InstantiateOrUpgradeChaincode(channelID string, chaincode Chaincode) error {
 	return client.resourceManager.instantiateOrUpgradeChaincode(channelID, chaincode)
 }
 
+// IsChaincodeInstalled returns whether the given chaincode has been installed or not.
 func (client *Client) IsChaincodeInstalled(chaincodeName string) bool {
 	return client.resourceManager.isChaincodeInstalled(chaincodeName)
 }
 
+// IsChaincodeInstantiated returns whether the given chaincode has been instantiated on the specified channel or not.
 func (client *Client) IsChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion string) bool {
 	return client.resourceManager.isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion)
 }
 
+// Invoke prepares and executes transaction using request and optional request options.
 func (client *Client) Invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	handler, err := client.selectChannelHandler(opts...)
 	if err != nil {
@@ -174,12 +182,41 @@ func (client *Client) Invoke(request *ChaincodeRequest, opts ...Option) (*Transa
 	return handler.invoke(request, opts...)
 }
 
+// Query chaincode using request and optional request options.
 func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	handler, err := client.selectChannelHandler(opts...)
 	if err != nil {
 		return nil, err
 	}
 	return handler.invoke(request, opts...)
+}
+
+// QueryBlockByTxID queries for block which contains a transaction.
+func (client *Client) QueryBlockByTxID(txID string, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.queryBlockByTxID(txID)
+}
+
+// RegisterChaincodeEvent registers for chaincode events. Unregister must be called when the registration is no longer needed.
+func (client *Client) RegisterChaincodeEvent(chaincodeID, eventFilter string, opts ...Option) (<-chan *ChaincodeEvent, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.registerChaincodeEvent(chaincodeID, eventFilter)
+}
+
+// UnregisterChaincodeEvent removes the given registration and closes the event channel.
+func (client *Client) UnregisterChaincodeEvent(eventFilter string, opts ...Option) error {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return err
+	}
+	handler.unregisterChaincodeEvent(eventFilter)
+	return nil
 }
 
 func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, error) {
