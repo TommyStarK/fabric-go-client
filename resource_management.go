@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	// protopeer "github.com/hyperledger/fabric-protos-go/peer"
-
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
@@ -16,7 +14,6 @@ import (
 	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/gopackager"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
-	// "github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/lifecycle"
 )
 
 type resourceManager interface {
@@ -26,7 +23,6 @@ type resourceManager interface {
 	instantiateOrUpgradeChaincode(channelID string, chaincode Chaincode) error
 	isChaincodeInstalled(chaincodeName string) bool
 	isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion string) bool
-	// lifecycleInstallChaincode(chaincode Chaincode) error
 }
 
 type resourceManagementClient struct {
@@ -358,42 +354,3 @@ func parseChaincodePolicy(chaincodePolicy string) (*common.SignaturePolicyEnvelo
 
 	return policy, nil
 }
-
-// func (rsm *resourceManagementClient) lifecycleInstallChaincode(chaincode Chaincode) error {
-// 	label := chaincode.Name + "_" + chaincode.Version
-
-// 	descriptor := &lifecycle.Descriptor{
-// 		Path:  chaincode.Path,
-// 		Type:  protopeer.ChaincodeSpec_GOLANG,
-// 		Label: label,
-// 	}
-
-// 	chaincodePackage, err := lifecycle.NewCCPackage(descriptor)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	request := resmgmt.LifecycleInstallCCRequest{
-// 		Label:   label,
-// 		Package: chaincodePackage,
-// 	}
-
-// 	opts := make([]resmgmt.RequestOption, 0, 2)
-// 	opts = append(opts, resmgmt.WithRetry(retry.DefaultResMgmtOpts))
-// 	opts = append(opts, resmgmt.WithTargets(rsm.peers...))
-
-// 	res, err := rsm.client.LifecycleInstallCC(request, opts...)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if len(res) == 0 {
-// 		return fmt.Errorf("unexpected error occurred, failed to lifecycle install chaincode %s", chaincode.Name)
-// 	}
-
-// 	if res[0].Status != 200 {
-// 		return fmt.Errorf("unexpected error occurred, failed to lifecycle install chaincode %s", chaincode.Name)
-// 	}
-
-// 	return nil
-// }
