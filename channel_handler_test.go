@@ -1,31 +1,33 @@
 package fabclient
 
 import (
-	"fmt"
+	"encoding/json"
 	"testing"
+	"time"
 )
 
-func storeNewAssetToLedger(t *testing.T, client *Client) {
+var txID string
+
+func writeToLedger(t *testing.T, client *Client) {
 	req := &ChaincodeRequest{
 		ChaincodeID: client.Config().Chaincodes[0].Name,
 		Function:    "store",
-		Args:        []string{"asset1", `{"content": "debug"}`},
+		Args:        []string{"asset-test", `{"content": "this is a content test"}`},
 	}
 
-	res, err := client.Invoke(req)
+	res, err := client.Invoke(req, WithOrdererResponseTimeout(2*time.Second))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("\nresponse: %#v\n\n", res)
-	// trxID = res.TransactionID
+	txID = res.TransactionID
 }
 
-func getAssetFromLedger(t *testing.T, client *Client) {
+func readFromLedger(t *testing.T, client *Client) {
 	req := &ChaincodeRequest{
 		ChaincodeID: client.Config().Chaincodes[0].Name,
 		Function:    "query",
-		Args:        []string{"asset1"},
+		Args:        []string{"asset-test"},
 	}
 
 	res, err := client.Query(req)
@@ -33,6 +35,133 @@ func getAssetFromLedger(t *testing.T, client *Client) {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("\nresponse: %#v\n\n", res)
-	fmt.Printf("payload: %s\n\n", string(res.Payload))
+	var result = struct {
+		Content string `json:"content"`
+		TxID    string `json:"txID"`
+	}{}
+
+	if err := json.Unmarshal(res.Payload, &result); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(result.TxID) == 0 {
+		t.Error("transaction ID should not be empty")
+	}
+
+	if result.Content != "this is a content test" {
+		t.Error(`content should be: "this is a content test"`)
+	}
+}
+
+func queryBlockByTxID(t *testing.T, client *Client) {
+	if _, err := client.QueryBlockByTxID(txID); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func registerChaincodeEvent(t *testing.T, client *Client) {
+	var (
+		done        = make(chan bool)
+		eventFilter = "test"
+		message     = "this is a message test"
+	)
+
+	ch, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, eventFilter)
+	if err != nil {
+		close(done)
+		t.Fatal(err)
+	}
+
+	go func() {
+		select {
+		case event := <-ch:
+			if event.EventName != eventFilter {
+				done <- false
+				return
+			}
+
+			if string(event.Payload) != message {
+				done <- false
+				return
+			}
+
+			done <- true
+			return
+		case <-time.After(5 * time.Second):
+			done <- false
+			return
+		}
+	}()
+
+	go func() {
+		req := &ChaincodeRequest{
+			ChaincodeID: client.Config().Chaincodes[0].Name,
+			Function:    "setEvent",
+			Args:        []string{eventFilter, message},
+		}
+
+		if _, err := client.Invoke(req); err != nil {
+			done <- false
+		}
+
+		return
+	}()
+
+	success := <-done
+	if !success {
+		t.Fail()
+	}
+
+	close(done)
+	client.UnregisterChaincodeEvent(eventFilter)
+}
+
+func chaincodeEventTimeout(t *testing.T, client *Client) {
+	_, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch := make(chan struct{})
+	go func() {
+		select {
+		case <-time.After(5 * time.Second):
+			ch <- struct{}{}
+			return
+		}
+	}()
+
+	<-ch
+	close(ch)
+	client.UnregisterChaincodeEvent("foo")
+}
+
+func chaincodeOpsFailureCases(t *testing.T, client *Client) {
+	if _, err := client.Invoke(nil); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.Invoke(nil, WithChannelID("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.Query(nil); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.Query(nil, WithChannelID("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByTxID("dummy"); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByTxID("dummy", WithChannelID("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.RegisterChaincodeEvent("dummy", "dummy", WithChannelID("dummy")); err == nil {
+		t.Fail()
+	}
 }
