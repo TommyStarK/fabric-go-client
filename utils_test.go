@@ -7,12 +7,12 @@ import (
 
 func TestConvertArrayOfStringsToArrayOfByteArrays(t *testing.T) {
 	witness := [][]byte{
-		[]byte("init"),
-		[]byte("a"),
-		[]byte("b"),
+		[]byte("this"),
+		[]byte("is"),
+		[]byte("working"),
 	}
 
-	test := convertArrayOfStringsToArrayOfByteArrays([]string{"init", "a", "b"})
+	test := convertArrayOfStringsToArrayOfByteArrays([]string{"this", "is", "working"})
 
 	if len(witness) != len(test) {
 		t.Fail()
