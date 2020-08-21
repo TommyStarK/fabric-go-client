@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Config holds the client configuration
 type Config struct {
 	Chaincodes []Chaincode `json:"chaincodes" yaml:"chaincodes"`
 	Channels   []Channel   `json:"channels" yaml:"channels"`
@@ -22,6 +23,7 @@ type Config struct {
 	Version       string `json:"version" yaml:"version"`
 }
 
+// NewConfigFromFile returns a new client config
 func NewConfigFromFile(configPath string) (*Config, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
