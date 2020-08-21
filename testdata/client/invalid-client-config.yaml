@@ -1,0 +1,26 @@
+version: 1.0.0
+organization: Org1
+sdkConfigPath: ./testdata/sdk/sdk-config.yaml
+identities:
+  admin:
+    username: Admin
+    certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/signcerts/Admin@org1.dummy.com-cert.pem
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/Admin@org1.dummy.com/msp/keystore/e0d98e7bdd10d4d6fd3d86275111d3ac4dc9bc538dd96afd72d16db6054e62e8_sk
+  users:
+  - username: User1
+    certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/signcerts/User1@org1.dummy.com-cert.pem
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/users/User1@org1.dummy.com/msp/keystore/bd80cf07206710f95ad0208effca64abfde55c6884df2da886915e14770bfaa9_sk
+channels:
+  - name: channelall
+    anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channelall.tx
+    configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx
+  - name: channel12
+    anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channel12.tx
+    configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channel12.tx
+chaincodes:
+  name: sacc
+  path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/sacc
+  policy: OR('Org1MSP.peer')
+  version: 1.0
+  initArgs:
+    - init
