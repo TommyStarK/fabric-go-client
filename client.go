@@ -98,12 +98,12 @@ func NewClient(cfg *Config) (*Client, error) {
 }
 
 // BindChannelToClient should be call once the peer joined a channel
-func (client *Client) BindChannelToClient(channelID string) error {
+func (client *Client) bindChannel(channelID string) error {
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
 	if handlers := client.channelsHandlers.find(channelID); handlers != nil {
-		return fmt.Errorf("channel %s already bound", channelID)
+		return nil
 	}
 
 	handlers := make(handlers, 0, len(client.config.Identities.Users))
@@ -143,7 +143,11 @@ func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 }
 
 func (client *Client) JoinChannel(channelID string) error {
-	return client.resourceManager.joinChannel(channelID)
+	if err := client.resourceManager.joinChannel(channelID); err != nil {
+		return err
+	}
+
+	return client.bindChannel(channelID)
 }
 
 func (client *Client) InstallChaincode(chaincode Chaincode) error {

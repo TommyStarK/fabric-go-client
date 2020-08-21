@@ -31,12 +31,6 @@ func TestChannelResourceManagement(t *testing.T) {
 	channelManagementFailureCases(t, org1client)
 }
 
-func TestBindChannelToClient(t *testing.T) {
-	if err := org1client.BindChannelToClient(org1client.Config().Channels[0].Name); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestSelectChannelHandler(t *testing.T) {
 	handler, err := org1client.selectChannelHandler()
 	if err != nil {
