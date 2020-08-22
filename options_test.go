@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-func TestOptionsWithChannelID(t *testing.T) {
+func TestOptionsWithChannelContext(t *testing.T) {
 	opts := &options{
 		channelID: "",
 	}
 
-	opt := WithChannelID("channelID")
+	opt := WithChannelContext("channelID")
 
 	if opt == nil {
 		t.Fail()
@@ -41,12 +41,12 @@ func TestOptionsWithOrdererResponseTimeout(t *testing.T) {
 	}
 }
 
-func TestOptionsWithUserIdentity(t *testing.T) {
+func TestOptionsWithUserContext(t *testing.T) {
 	opts := &options{
 		userIdentity: "",
 	}
 
-	opt := WithUserIdentity("foo")
+	opt := WithUserContext("foo")
 
 	if opt == nil {
 		t.Fail()

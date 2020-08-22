@@ -22,6 +22,10 @@ func createUpdateAndJoinChannel(t *testing.T, client *Client) {
 	if err = client.JoinChannel(channel.Name); err != nil {
 		t.Fatal(err)
 	}
+
+	if err = client.JoinChannel(channel.Name); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func channelManagementFailureCases(t *testing.T, client *Client) {
@@ -91,5 +95,24 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 
 	if client.IsChaincodeInstantiated(channelID, chaincode.Name, chaincode.Version) {
 		t.Errorf("chaincode '%s' should not be instantiated on all peers belonging to org MSP", chaincode.Name)
+	}
+}
+
+func testConvertChaincodeRequest(t *testing.T) {
+	req := &ChaincodeRequest{
+		ChaincodeID: "",
+		Function:    "",
+		Args:        []string{},
+		InvocationChain: []*ChaincodeCall{
+			{
+				ID:          "test",
+				Collections: []string{},
+			},
+		},
+	}
+
+	r := convertChaincodeRequest(req)
+	if r.InvocationChain[0].ID != "test" {
+		t.Fail()
 	}
 }

@@ -43,6 +43,10 @@ func (chls channelsHandlers) find(channelName string) handlers {
 	return nil
 }
 
+// Client enables:
+// - managing resources in Fabric network
+// - access to a channel on a Fabric network.
+// - ledger queries on a Fabric network.
 type Client struct {
 	config           *Config
 	fabricSDK        *fabsdk.FabricSDK
@@ -53,6 +57,7 @@ type Client struct {
 	mutex sync.RWMutex
 }
 
+// NewClientFromConfigFile returns a client instance from a config file.
 func NewClientFromConfigFile(configPath string) (*Client, error) {
 	cfg, err := NewConfigFromFile(configPath)
 	if err != nil {
@@ -62,6 +67,7 @@ func NewClientFromConfigFile(configPath string) (*Client, error) {
 	return NewClient(cfg)
 }
 
+// NewClient returns a Client instance.
 func NewClient(cfg *Config) (*Client, error) {
 	sdk, err := fabsdk.New(config.FromFile(cfg.SDKConfigPath))
 	if err != nil {
@@ -97,7 +103,6 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
-// BindChannelToClient should be call once the peer joined a channel
 func (client *Client) bindChannel(channelID string) error {
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
@@ -136,7 +141,29 @@ func (client *Client) bindChannel(channelID string) error {
 
 // Config returns the client configuration
 func (client *Client) Config() *Config {
-	return client.config
+	config := &Config{
+		Chaincodes: make([]Chaincode, len(client.config.Chaincodes)),
+		Channels:   make([]Channel, len(client.config.Channels)),
+		Identities: struct {
+			Admin Identity   `json:"admin" yaml:"admin"`
+			Users []Identity `json:"users" yaml:"users"`
+		}{
+			Admin: Identity{
+				Certificate: client.config.Identities.Admin.Certificate,
+				PrivateKey:  client.config.Identities.Admin.PrivateKey,
+				Username:    client.config.Identities.Admin.Username,
+			},
+			Users: make([]Identity, len(client.config.Identities.Users)),
+		},
+		Organization:  client.config.Organization,
+		Version:       client.config.Version,
+		SDKConfigPath: client.config.SDKConfigPath,
+	}
+
+	copy(config.Identities.Users, client.config.Identities.Users)
+	copy(config.Chaincodes, client.config.Chaincodes)
+	copy(config.Channels, client.config.Channels)
+	return config
 }
 
 // SaveChannel creates or updates channel.
@@ -188,7 +215,7 @@ func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*Transac
 	if err != nil {
 		return nil, err
 	}
-	return handler.invoke(request, opts...)
+	return handler.query(request, opts...)
 }
 
 // QueryBlockByTxID queries for block which contains a transaction.

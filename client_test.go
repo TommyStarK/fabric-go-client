@@ -34,27 +34,32 @@ func TestChannelResourceManagement(t *testing.T) {
 		t.Fail()
 	}
 
-	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"))
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"))
 	if err != nil || handler == nil {
 		t.Fail()
 	}
 
-	handler, err = org1client.selectChannelHandler(WithUserIdentity("User1"))
+	handler, err = org1client.selectChannelHandler(WithUserContext("User1"))
 	if err != nil || handler == nil {
 		t.Fail()
 	}
 
-	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("User1"))
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("User1"))
 	if err != nil || handler == nil {
 		t.Fail()
 	}
 
-	handler, err = org1client.selectChannelHandler(WithChannelID("dummy"))
+	handler, err = org1client.selectChannelHandler(WithChannelContext("dummy"))
 	if err == nil || handler != nil {
 		t.Fail()
 	}
 
-	handler, err = org1client.selectChannelHandler(WithChannelID("channelall"), WithUserIdentity("foo"))
+	handler, err = org1client.selectChannelHandler(WithUserContext("foo"))
+	if err == nil || handler != nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("foo"))
 	if err == nil || handler != nil {
 		t.Fail()
 	}
@@ -72,6 +77,7 @@ func TestChaincodeOperations(t *testing.T) {
 	registerChaincodeEvent(t, org1client)
 	chaincodeEventTimeout(t, org1client)
 	chaincodeOpsFailureCases(t, org1client)
+	testConvertChaincodeRequest(t)
 }
 
 func TestMain(m *testing.M) {

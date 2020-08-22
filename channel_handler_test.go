@@ -141,7 +141,7 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 		t.Fail()
 	}
 
-	if _, err := client.Invoke(nil, WithChannelID("dummy")); err == nil {
+	if _, err := client.Invoke(nil, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
@@ -149,7 +149,7 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 		t.Fail()
 	}
 
-	if _, err := client.Query(nil, WithChannelID("dummy")); err == nil {
+	if _, err := client.Query(nil, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
@@ -157,11 +157,27 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 		t.Fail()
 	}
 
-	if _, err := client.QueryBlockByTxID("dummy", WithChannelID("dummy")); err == nil {
+	if _, err := client.QueryBlockByTxID("dummy", WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.RegisterChaincodeEvent("dummy", "dummy", WithChannelID("dummy")); err == nil {
+	if _, err := client.RegisterChaincodeEvent("dummy", "dummy", WithChannelContext("dummy")); err == nil {
 		t.Fail()
+	}
+
+	if err := client.UnregisterChaincodeEvent("dummy", WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "eventFilter"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "eventFilter"); err == nil {
+		t.Fail()
+	}
+
+	if err := client.UnregisterChaincodeEvent("eventFilter"); err != nil {
+		t.Error(err)
 	}
 }

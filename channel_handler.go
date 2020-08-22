@@ -64,18 +64,12 @@ func newChannelHandler(ctx context.ChannelProvider) (channelHandler, error) {
 
 func (chn *channelHandlerClient) invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	response, err := chn.client.Execute(convertChaincodeRequest(request), convertOptions(opts...)...)
-	if err != nil {
-		return nil, err
-	}
-	return convertChaincodeTransactionResponse(response), nil
+	return convertChaincodeTransactionResponse(response), err
 }
 
 func (chn *channelHandlerClient) query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	response, err := chn.client.Query(convertChaincodeRequest(request), convertOptions(opts...)...)
-	if err != nil {
-		return nil, err
-	}
-	return convertChaincodeTransactionResponse(response), nil
+	return convertChaincodeTransactionResponse(response), err
 }
 
 func (chn *channelHandlerClient) queryBlockByTxID(txID string) (*Block, error) {
@@ -166,10 +160,6 @@ func convertBlock(b *common.Block) *Block {
 }
 
 func convertChaincodeEvent(e *fab.CCEvent) *ChaincodeEvent {
-	if e == nil {
-		return nil
-	}
-
 	event := ChaincodeEvent(*e)
 	return &event
 }

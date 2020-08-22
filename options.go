@@ -8,7 +8,7 @@ type options struct {
 	userIdentity           string
 }
 
-// Option ...
+// Option describes a functional parameter for the client
 type Option interface {
 	apply(*options)
 }
@@ -19,22 +19,22 @@ func (f optionFunc) apply(o *options) {
 	f(o)
 }
 
-// WithChannelID allows to target a specific channel
-func WithChannelID(channelID string) Option {
+// WithChannelContext allows to target a specific channel
+func WithChannelContext(channelID string) Option {
 	return optionFunc(func(o *options) {
 		o.channelID = channelID
 	})
 }
 
-// WithOrdererResponseTimeout allows to specify a timeout when sending a transaction to the ordering service
+// WithOrdererResponseTimeout allows to specify a timeout for orderer response
 func WithOrdererResponseTimeout(timeout time.Duration) Option {
 	return optionFunc(func(o *options) {
 		o.ordererResponseTimeout = timeout
 	})
 }
 
-// WithUserIdentity allows to specify a user context
-func WithUserIdentity(username string) Option {
+// WithUserContext allows to specify a user context
+func WithUserContext(username string) Option {
 	return optionFunc(func(o *options) {
 		o.userIdentity = username
 	})
