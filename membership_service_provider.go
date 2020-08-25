@@ -2,7 +2,6 @@ package fabclient
 
 import (
 	"io/ioutil"
-	"os"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -18,7 +17,7 @@ type membershipServiceClient struct {
 	client *msp.Client
 }
 
-func newMembershipServiceProvider(organization string, ctx context.ClientProvider) (membershipServiceProvider, error) {
+func newMembershipServiceProvider(ctx context.ClientProvider, organization string) (membershipServiceProvider, error) {
 	client, err := msp.New(ctx, msp.WithOrg(organization))
 	if err != nil {
 		return nil, err
@@ -32,14 +31,6 @@ func newMembershipServiceProvider(organization string, ctx context.ClientProvide
 }
 
 func (m *membershipServiceClient) createSigningIdentity(certificate, privateKey string) (mspprovider.SigningIdentity, error) {
-	if _, err := os.Stat(certificate); err != nil {
-		return nil, err
-	}
-
-	if _, err := os.Stat(privateKey); err != nil {
-		return nil, err
-	}
-
 	certificateAsBytes, err := ioutil.ReadFile(certificate)
 	if err != nil {
 		return nil, err

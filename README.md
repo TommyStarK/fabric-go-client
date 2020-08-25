@@ -4,6 +4,20 @@
 
 :warning: Work in progress :warning:
 
+This client enables Go developers to build solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-1.4/whatsnew.html) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
+
+It is a wrapper around the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go) enabling managing resources in Fabric network and access to a channel on a Fabric network.
+
+The client has been designed to use the new chaincode lifecycle as well as the gateway programming model, it is meant to be compliant with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) version 2.2.
+
+If you wish to use the legacy chaincode lifecyle and run the client against HLF 1.4, please take a look at this [version](https://github.com/TommyStarK/fabric-go-client/tree/v1.4) of the client.
+
+## Usage
+
+```bash
+$ go get github.com/TommyStarK/fabric-go-client
+```
+
 ## Test
 
 ```bash

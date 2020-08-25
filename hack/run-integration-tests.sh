@@ -6,7 +6,7 @@ docker build . -t fabclient;
 
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d;
 
-sleep 10;
+sleep 20;
 
 check=$(docker ps -aq -f status=exited  | wc -l);
 check=${check##*( )};
@@ -20,7 +20,7 @@ docker run --rm --network=${COMPOSE_PROJECT_NAME}_default -v `pwd`:/go/src/githu
 
 rc=$?;
 
-unset ${COMPOSE_PROJECT_NAME};
+# TOODO: grep chaincode , rm container / images
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME down;
 docker images | grep dev-peer | awk '{print $3}' | xargs docker rmi -f;
 docker ps -aq -f status=exited | xargs docker rm -f;

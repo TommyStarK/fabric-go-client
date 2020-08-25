@@ -5,6 +5,10 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
+// Client enables:
+// - managing resources in Fabric network
+// - access to a channel on a Fabric network.
+// - ledger queries on a Fabric network.
 type Client struct {
 	config          *Config
 	fabricSDK       *fabsdk.FabricSDK
@@ -12,6 +16,7 @@ type Client struct {
 	resourceManager resourceManager
 }
 
+// NewClientFromConfigFile returns a client instance from a config file.
 func NewClientFromConfigFile(configPath string) (*Client, error) {
 	cfg, err := NewConfigFromFile(configPath)
 	if err != nil {
@@ -21,13 +26,14 @@ func NewClientFromConfigFile(configPath string) (*Client, error) {
 	return NewClient(cfg)
 }
 
+// NewClient returns a Client instance.
 func NewClient(cfg *Config) (*Client, error) {
 	sdk, err := fabsdk.New(config.FromFile(cfg.SDKConfigPath))
 	if err != nil {
 		return nil, err
 	}
 
-	msp, err := newMembershipServiceProvider(cfg.Organization, sdk.Context())
+	msp, err := newMembershipServiceProvider(sdk.Context(), cfg.Organization)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +60,39 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
+// Config returns the client configuration
 func (client *Client) Config() *Config {
-	return client.config
+	config := &Config{
+		Chaincodes: make([]Chaincode, len(client.config.Chaincodes)),
+		Channels:   make([]Channel, len(client.config.Channels)),
+		Identities: struct {
+			Admin Identity   `json:"admin" yaml:"admin"`
+			Users []Identity `json:"users" yaml:"users"`
+		}{
+			Admin: Identity{
+				Certificate: client.config.Identities.Admin.Certificate,
+				PrivateKey:  client.config.Identities.Admin.PrivateKey,
+				Username:    client.config.Identities.Admin.Username,
+			},
+			Users: make([]Identity, len(client.config.Identities.Users)),
+		},
+		Organization:  client.config.Organization,
+		Version:       client.config.Version,
+		SDKConfigPath: client.config.SDKConfigPath,
+	}
+
+	copy(config.Identities.Users, client.config.Identities.Users)
+	copy(config.Chaincodes, client.config.Chaincodes)
+	copy(config.Channels, client.config.Channels)
+	return config
 }
 
+// SaveChannel creates or updates channel.
 func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 	return client.resourceManager.saveChannel(channelID, channelConfigPath)
 }
 
+// JoinChannel allows for peers to join existing channel
 func (client *Client) JoinChannel(channelID string) error {
 	return client.resourceManager.joinChannel(channelID)
 }
