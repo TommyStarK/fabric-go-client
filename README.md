@@ -4,7 +4,7 @@
 
 :warning: Work in progress :warning:
 
-This client enables Go developers to build solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-1.4/whatsnew.html) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
+This client enables Go developers to build solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
 
 It is a wrapper around the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go) enabling managing resources in Fabric network and access to a channel on a Fabric network.
 
