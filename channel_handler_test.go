@@ -117,21 +117,28 @@ func registerChaincodeEvent(t *testing.T, client *Client) {
 }
 
 func chaincodeEventTimeout(t *testing.T, client *Client) {
-	_, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "foo")
+	chEvent, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "foo")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ch := make(chan struct{})
+	ch := make(chan bool)
 	go func() {
 		select {
+		case <-chEvent:
+			ch <- true
+			return
 		case <-time.After(5 * time.Second):
-			ch <- struct{}{}
+			ch <- false
 			return
 		}
 	}()
 
-	<-ch
+	res := <-ch
+	if res {
+		t.Fail()
+	}
+
 	close(ch)
 	client.UnregisterChaincodeEvent("foo")
 }

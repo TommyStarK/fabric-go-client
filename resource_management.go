@@ -100,8 +100,15 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 		Package: ccPackage,
 	}
 
-	if _, err := rsm.client.InstallCC(request, rsm.defaultOpts...); err != nil {
+	res, err := rsm.client.InstallCC(request, rsm.defaultOpts...)
+	if err != nil {
 		return fmt.Errorf("failed to install chaincode %s (version: %s): %w", chaincode.Name, chaincode.Version, err)
+	}
+
+	for _, r := range res {
+		if r.Status != 200 {
+			return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+		}
 	}
 
 	return nil

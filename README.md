@@ -15,6 +15,7 @@ This version is built to be compliant with [Hyperledger Fabric](https://hyperled
 
 If you wish to use the new chaincode lifecyle as well as the gateway programming model, please take a look at this [version](https://github.com/TommyStarK/fabric-go-client) of the client.
 
+:warning: For now, the client is able to handle only Go chaincodes, meaning you cannot install neither Node.js or Java chaincodes with it.
 
 ## Usage
 
