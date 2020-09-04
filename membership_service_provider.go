@@ -30,6 +30,8 @@ func newMembershipServiceProvider(ctx context.ClientProvider, organization strin
 	return mspclient, nil
 }
 
+var _ membershipServiceProvider = (*membershipServiceClient)(nil)
+
 func (m *membershipServiceClient) createSigningIdentity(certificate, privateKey string) (mspprovider.SigningIdentity, error) {
 	certificateAsBytes, err := ioutil.ReadFile(certificate)
 	if err != nil {

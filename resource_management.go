@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hyperledger/fabric-protos-go/common"
+	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/resmgmt"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/retry"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -61,6 +62,8 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	return rsmClient, nil
 }
 
+var _ resourceManager = (*resourceManagementClient)(nil)
+
 func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath string) error {
 	request := resmgmt.SaveChannelRequest{
 		ChannelID:         channelID,
@@ -107,7 +110,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 
 	for _, r := range res {
 		if r.Status != 200 {
-			return fmt.Errorf("unexpected error occurred, failed to install chaincode %s", chaincode.Name)
+			return fmt.Errorf("peer (%s), unexpected error occurred, failed to install chaincode %s, %s", r.Target, chaincode.Name, r.Info)
 		}
 	}
 
@@ -130,7 +133,7 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 		go func() {
 			response, err := rsm.client.QueryInstantiatedChaincodes(channelID, resmgmt.WithTargets(peer))
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to query instanciated chaincodes: %w", peer.URL(), err)
+				done <- fmt.Errorf("peer (%s), failed to query instantiated chaincodes: %w", peer.URL(), err)
 				return
 			}
 
@@ -176,7 +179,7 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 			if err != nil {
 				if finalError == nil {
 					finalError = fmt.Errorf(
-						"following error(s) occurred when instanciating/upgrading chaincode %s: ",
+						"following error(s) occurred when instantiating/upgrading chaincode %s: ",
 						chaincode.Name,
 					)
 				}
@@ -204,17 +207,21 @@ func (rsm *resourceManagementClient) instantiateChaincode(channelID string, chai
 		Name:    chaincode.Name,
 		Path:    chaincode.Path,
 		Version: chaincode.Version,
-		Args:    convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs),
+		Lang:    pb.ChaincodeSpec_GOLANG,
 		Policy:  policy,
+	}
+
+	if len(chaincode.InitArgs) > 0 {
+		request.Args = convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs)
 	}
 
 	response, err := rsm.client.InstantiateCC(channelID, request, resmgmt.WithTargets(peer))
 	if err != nil {
-		return fmt.Errorf("peer (%s), failed to instanciate chaincode %s (version %s): %w", peer.URL(), chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("peer (%s), failed to instantiate chaincode %s (version %s): %w", peer.URL(), chaincode.Name, chaincode.Version, err)
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to instanciate chaincode %s (version %s)", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("peer (%s), failed to instantiate chaincode %s (version %s)", peer.URL(), chaincode.Name, chaincode.Version)
 	}
 
 	return nil
@@ -230,8 +237,12 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 		Name:    chaincode.Name,
 		Path:    chaincode.Path,
 		Version: chaincode.Version,
-		Args:    convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs),
+		Lang:    pb.ChaincodeSpec_GOLANG,
 		Policy:  policy,
+	}
+
+	if len(chaincode.InitArgs) > 0 {
+		request.Args = convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs)
 	}
 
 	response, err := rsm.client.UpgradeCC(channelID, request, resmgmt.WithTargets(peer))
@@ -240,7 +251,7 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to upgrade chaincode %s  to version %s", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("peer (%s), failed to upgrade chaincode %s to version %s", peer.URL(), chaincode.Name, chaincode.Version)
 	}
 
 	return nil
@@ -248,9 +259,9 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 
 func (rsm *resourceManagementClient) isChaincodeInstalled(chaincodeName string) bool {
 	count := 0
-	success := true
 	checkChan := make(chan bool)
 	numberOfPeers := len(rsm.peers)
+	success := true
 
 	for _, p := range rsm.peers {
 		peer := p
@@ -299,9 +310,9 @@ func (rsm *resourceManagementClient) isChaincodeInstalled(chaincodeName string) 
 
 func (rsm *resourceManagementClient) isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion string) bool {
 	count := 0
-	success := true
 	checkChan := make(chan bool)
 	numberOfPeers := len(rsm.peers)
+	success := true
 
 	for _, p := range rsm.peers {
 		peer := p
@@ -349,8 +360,10 @@ func (rsm *resourceManagementClient) isChaincodeInstantiated(channelID, chaincod
 }
 
 func parseChaincodePolicy(chaincodePolicy string) (*common.SignaturePolicyEnvelope, error) {
-	var err error
-	policy := &common.SignaturePolicyEnvelope{}
+	var (
+		err    error
+		policy *common.SignaturePolicyEnvelope
+	)
 
 	if len(chaincodePolicy) > 0 {
 		policy, err = cauthdsl.FromString(chaincodePolicy)

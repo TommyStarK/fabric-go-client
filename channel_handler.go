@@ -62,6 +62,8 @@ func newChannelHandler(ctx context.ChannelProvider) (channelHandler, error) {
 	return client, nil
 }
 
+var _ channelHandler = (*channelHandlerClient)(nil)
+
 func (chn *channelHandlerClient) invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	response, err := chn.client.Execute(convertChaincodeRequest(request), convertOptions(opts...)...)
 	return convertChaincodeTransactionResponse(response), err
