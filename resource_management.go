@@ -73,7 +73,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 
 	if _, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyExists) {
-			return fmt.Errorf("failed to save channel %s: %w", channelID, err)
+			return fmt.Errorf("failed to save channel '%s': %w", channelID, err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
 	err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...)
 	if err != nil && !strings.Contains(err.Error(), _channelAlreadyJoined) {
-		return fmt.Errorf("failed to join channel %s: %w", channelID, err)
+		return fmt.Errorf("failed to join channel '%s': %w", channelID, err)
 	}
 
 	return nil
@@ -105,12 +105,12 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 
 	res, err := rsm.client.InstallCC(request, rsm.defaultOpts...)
 	if err != nil {
-		return fmt.Errorf("failed to install chaincode %s (version: %s): %w", chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("failed to install chaincode '%s' (version: %s): %w", chaincode.Name, chaincode.Version, err)
 	}
 
 	for _, r := range res {
 		if r.Status != 200 {
-			return fmt.Errorf("peer (%s), unexpected error occurred, failed to install chaincode %s, %s", r.Target, chaincode.Name, r.Info)
+			return fmt.Errorf("peer (%s), unexpected error occurred, failed to install chaincode '%s', %s", r.Target, chaincode.Name, r.Info)
 		}
 	}
 
@@ -119,7 +119,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 
 func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID string, chaincode Chaincode) error {
 	if !rsm.isChaincodeInstalled(chaincode.Name) {
-		return fmt.Errorf("chaincode %s has not been installed", chaincode.Name)
+		return fmt.Errorf("chaincode '%s' has not been installed", chaincode.Name)
 	}
 
 	var finalError error
@@ -153,13 +153,13 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 
 			currentVersion, err := strconv.ParseFloat(ChaincodeCurrentVersion, 64)
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to parse chaincode %s current version: %w", peer.URL(), chaincode.Name, err)
+				done <- fmt.Errorf("peer (%s), failed to parse chaincode '%s' current version: %w", peer.URL(), chaincode.Name, err)
 				return
 			}
 
 			newVersion, err := strconv.ParseFloat(chaincode.Version, 64)
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to parse chaincode %s new version: %w", peer.URL(), chaincode.Name, err)
+				done <- fmt.Errorf("peer (%s), failed to parse chaincode '%s' new version: %w", peer.URL(), chaincode.Name, err)
 				return
 			}
 
@@ -179,7 +179,7 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 			if err != nil {
 				if finalError == nil {
 					finalError = fmt.Errorf(
-						"following error(s) occurred when instantiating/upgrading chaincode %s: ",
+						"following error(s) occurred when instantiating/upgrading chaincode '%s': ",
 						chaincode.Name,
 					)
 				}
@@ -217,11 +217,11 @@ func (rsm *resourceManagementClient) instantiateChaincode(channelID string, chai
 
 	response, err := rsm.client.InstantiateCC(channelID, request, resmgmt.WithTargets(peer))
 	if err != nil {
-		return fmt.Errorf("peer (%s), failed to instantiate chaincode %s (version %s): %w", peer.URL(), chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("peer (%s), failed to instantiate chaincode '%s' (version %s): %w", peer.URL(), chaincode.Name, chaincode.Version, err)
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to instantiate chaincode %s (version %s)", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("peer (%s), failed to instantiate chaincode '%s' (version %s)", peer.URL(), chaincode.Name, chaincode.Version)
 	}
 
 	return nil
@@ -247,11 +247,11 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 
 	response, err := rsm.client.UpgradeCC(channelID, request, resmgmt.WithTargets(peer))
 	if err != nil {
-		return fmt.Errorf("peer (%s), failed to upgrade chaincode %s to version %s: %w", peer.URL(), chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("peer (%s), failed to upgrade chaincode '%s' to version %s: %w", peer.URL(), chaincode.Name, chaincode.Version, err)
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to upgrade chaincode %s to version %s", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("peer (%s), failed to upgrade chaincode '%s' to version %s", peer.URL(), chaincode.Name, chaincode.Version)
 	}
 
 	return nil
@@ -281,12 +281,7 @@ func (rsm *resourceManagementClient) isChaincodeInstalled(chaincodeName string) 
 				}
 			}
 
-			if !found {
-				checkChan <- false
-				return
-			}
-
-			checkChan <- true
+			checkChan <- found
 			return
 		}()
 	}
@@ -332,12 +327,7 @@ func (rsm *resourceManagementClient) isChaincodeInstantiated(channelID, chaincod
 				}
 			}
 
-			if !found {
-				checkChan <- false
-				return
-			}
-
-			checkChan <- true
+			checkChan <- found
 			return
 		}()
 	}

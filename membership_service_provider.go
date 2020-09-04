@@ -1,6 +1,7 @@
 package fabclient
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
@@ -35,12 +36,12 @@ var _ membershipServiceProvider = (*membershipServiceClient)(nil)
 func (m *membershipServiceClient) createSigningIdentity(certificate, privateKey string) (mspprovider.SigningIdentity, error) {
 	certificateAsBytes, err := ioutil.ReadFile(certificate)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create signing identity: %w", err)
 	}
 
 	privateKeyAsBytes, err := ioutil.ReadFile(privateKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create signing identity: %w", err)
 	}
 
 	return m.client.CreateSigningIdentity(mspprovider.WithCert(certificateAsBytes), mspprovider.WithPrivateKey(privateKeyAsBytes))

@@ -89,7 +89,7 @@ func (chn *channelHandlerClient) registerChaincodeEvent(chaincodeID, eventFilter
 
 	registration, ch, err := chn.eventManager.RegisterChaincodeEvent(chaincodeID, eventFilter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to register chaincode event (%s) on chaincode '%s': %w", eventFilter, chaincodeID, err)
 	}
 
 	stopChan := make(chan chan struct{})

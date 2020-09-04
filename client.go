@@ -122,7 +122,7 @@ func (client *Client) bindChannel(channelID string) error {
 
 		chHandler, err := newChannelHandler(userContext)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to bind channel '%s' to client: %w", channelID, err)
 		}
 
 		handlers = append(handlers, handler{
@@ -139,7 +139,7 @@ func (client *Client) bindChannel(channelID string) error {
 	return nil
 }
 
-// Config returns the client configuration
+// Config returns the client configuration.
 func (client *Client) Config() *Config {
 	config := &Config{
 		Chaincodes:        make([]Chaincode, len(client.config.Chaincodes)),
@@ -170,7 +170,7 @@ func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 	return client.resourceManager.saveChannel(channelID, channelConfigPath)
 }
 
-// JoinChannel allows for peers to join existing channel
+// JoinChannel allows for peers to join existing channel.
 func (client *Client) JoinChannel(channelID string) error {
 	if err := client.resourceManager.joinChannel(channelID); err != nil {
 		return err
@@ -259,7 +259,7 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 	}
 
 	if len(options.channelID) == 0 && len(client.channelsHandlers) > 1 {
-		return nil, errors.New("no channel ID specified")
+		return nil, errors.New("cannot determine channel context, multiple channels bound to client")
 	}
 
 	if len(options.channelID) == 0 {
@@ -277,7 +277,7 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 
 	chanHandlers := client.channelsHandlers.find(options.channelID)
 	if chanHandlers == nil {
-		return nil, fmt.Errorf("binding for channel %s not found", options.channelID)
+		return nil, fmt.Errorf("binding for channel '%s' not found", options.channelID)
 	}
 
 	if len(options.userIdentity) > 0 {
