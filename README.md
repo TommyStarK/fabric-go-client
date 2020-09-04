@@ -8,22 +8,26 @@
 
 :warning: Work in progress :warning:
 
-This client enables Go developers to build solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
+The aim of this client is to facilitate the development of solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
 
-It is a wrapper around the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go) enabling managing resources in Fabric network and access to a channel on a Fabric network.
+It is a wrapper around the fabric-sdk-go. The client has been designed for being able to manage multiple channels and interact with multiple chaincodes.
 
-The client has been designed to use the new chaincode lifecycle as well as the gateway programming model, it is meant to be compliant with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) version 2.2.
+The client uses the new chaincode lifecycle as well as the gateway programming model, it is meant to be compliant with [Hyperledger Fabric v2.2](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) .
 
-If you wish to use the legacy chaincode lifecyle and run the client against HLF 1.4, please take a look at this [version](https://github.com/TommyStarK/fabric-go-client/tree/v1.4) of the client.
+If you wish to use the legacy chaincode lifecyle and run the client against Hyperledger Fabric v1.4, please take a look at [this version](https://github.com/TommyStarK/fabric-go-client/tree/v1.4) of the client.
+
+:warning: For the moment, the client is only able to manage Go chaincodes, meaning you cannot install neither Node.js nor Java chaincodes with it.
 
 ## Usage
 
 ```bash
-$ go get github.com/TommyStarK/fabric-go-client
+❯ go get github.com/TommyStarK/fabric-go-client
 ```
+
+You will find an example of how to instantiate and use the client [here](https://github.com/TommyStarK/fabric-go-client/blob/master/example_test.go). An example of how to configure the client is also available [here](https://github.com/TommyStarK/fabric-go-client/blob/master/testdata/client/client-config.yaml).
 
 ## Test
 
 ```bash
-$ ./hack/run-integration-tests.sh
+❯ ./hack/run-integration-tests.sh
 ```
