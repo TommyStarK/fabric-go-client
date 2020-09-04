@@ -5,6 +5,10 @@ client:
     level: error
   cryptoconfig:
     path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config
+  credentialStore:
+    path: /tmp/org1-credential-store
+    cryptoStore:
+      path: /tmp/org1-crypto-store
 organizations:
   Org1:
     mspid: Org1MSP
