@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
+
 BUILD_NUMBER="${BUILD_NUMBER:-0}"
 export COMPOSE_PROJECT_NAME=fabclient_${BUILD_NUMBER}
 
 docker build . -t fabclient;
 
-docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d;
+for i in {1..3}
+do
+  if [[ $i -eq 1 ]]; then
+    docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d orderer.dummy.com;
+  else
+    docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d orderer${i}.dummy.com;
+  fi
+  sleep 5;
+done
 
-sleep 20;
+docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d peer0.org1.dummy.com;
+sleep 5;
 
 check=$(docker ps -aq -f status=exited  | wc -l);
 check=${check##*( )};
@@ -20,11 +30,15 @@ docker run --rm --network=${COMPOSE_PROJECT_NAME}_default -v `pwd`:/go/src/githu
 
 rc=$?;
 
-# TOODO: grep chaincode , rm container / images
+XARGS="xargs -r"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  XARGS="xargs"
+fi
+
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME down;
-docker images | grep dev-peer | awk '{print $3}' | xargs docker rmi -f;
-docker ps -aq -f status=exited | xargs docker rm -f;
-docker images -qf dangling=true | xargs docker rmi -f;
+docker ps -a | grep "dev-peer0.org1.dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $1}'| $XARGS docker rm -f;
+docker images | grep "dev-peer0.org1.dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $3}'| $XARGS docker rmi -f;
+docker rmi -f fabclient;
 docker volume prune -f;
 docker network prune -f;
 
