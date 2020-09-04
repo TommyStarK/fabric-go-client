@@ -1,6 +1,5 @@
-version: 1.0.0
 organization: Org1
-sdkConfigPath: ./testdata/sdk/sdk-config.yaml
+connectionProfile: ./testdata/sdk/connection-profile.yaml
 identities:
   admin:
     username: Admin
@@ -19,7 +18,12 @@ channels:
     configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channel12.tx
 chaincodes:
   - name: fcacc
-    path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
-    version: 1.0
     initArgs:
-      - Init
+        - Init
+    initRequired: true
+    mustBeApprovedByOrgs:
+      - Org1MSP
+    path: /go/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
+    role: member
+    version: 1.0
+

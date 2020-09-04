@@ -1,0 +1,81 @@
+version: 1.0.0
+client:
+  organization: Org1
+  logging:
+    level: error
+  cryptoconfig:
+    path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config
+  credentialStore:
+    path: /tmp/org1-credential-store
+    cryptoStore:
+      path: /tmp/org1-crypto-store
+organizations:
+  Org1:
+    mspid: Org1MSP
+    cryptoPath: peerOrganizations/org1.dummy.com/users/{userName}@org1.dummy.com/msp
+    peers:
+      - peer0.org1.dummy.com
+channels:
+  channelall:
+    orderers:
+      - orderer.dummy.com
+      - orderer2.dummy.com
+      - orderer3.dummy.com
+    peers:
+      peer0.org1.dummy.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+orderers:
+  orderer.dummy.com:
+    url: orderer.dummy.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.dummy.com
+      hostnameOverride: orderer.dummy.com
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config/ordererOrganizations/dummy.com/tlsca/tlsca.dummy.com-cert.pem
+  orderer2.dummy.com:
+    url: orderer2.dummy.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer2.dummy.com
+      hostnameOverride: orderer2.dummy.com
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config/ordererOrganizations/dummy.com/tlsca/tlsca.dummy.com-cert.pem
+  orderer3.dummy.com:
+    url: orderer3.dummy.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer3.dummy.com
+      hostnameOverride: orderer3.dummy.com
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config/ordererOrganizations/dummy.com/tlsca/tlsca.dummy.com-cert.pem
+peers:
+  peer0.org1.dummy.com:
+    url: peer0.org1.dummy.com:7051
+    eventUrl: peer0.org1.dummy.com:7053
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.dummy.com
+      hostnameOverride: peer0.org1.dummy.com
+    tlsCACerts:
+      path: ${GOPATH}/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org1.dummy.com/tlsca/tlsca.org1.dummy.com-cert.pem
+entityMatchers:
+  orderer:
+    - pattern: (\w*)orderer.dummy.com(\w*)
+      urlSubstitutionExp: orderer.dummy.com:7050
+      sslTargetOverrideUrlSubstitutionExp: orderer.dummy.com
+      mappedHost: orderer.dummy.com
+    - pattern: (\w*)orderer2.dummy.com(\w*)
+      urlSubstitutionExp: orderer2.dummy.com:7050
+      sslTargetOverrideUrlSubstitutionExp: orderer2.dummy.com
+      mappedHost: orderer2.dummy.com
+    - pattern: (\w*)orderer3.dummy.com(\w*)
+      urlSubstitutionExp: orderer3.dummy.com:7050
+      sslTargetOverrideUrlSubstitutionExp: orderer3.dummy.com
+      mappedHost: orderer3.dummy.com
+  peer:
+    - pattern: (\w*)peer0.org1.dummy.com(\w*)
+      urlSubstitutionExp: peer0.org1.dummy.com:7051
+      eventUrlSubstitutionExp: peer0.org1.dummy.com:7053
+      sslTargetOverrideUrlSubstitutionExp: peer0.org1.dummy.com
+      mappedHost: peer0.org1.dummy.com
