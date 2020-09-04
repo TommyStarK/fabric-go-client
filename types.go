@@ -26,7 +26,7 @@ type Block struct {
 
 // Chaincode describes info of a chaincode
 type Chaincode struct {
-	InitArgs []string `json:"initArgs" yaml:"initArgs"`
+	InitArgs []string `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`
 	Name     string   `json:"name" yaml:"name"`
 	Path     string   `json:"path" yaml:"path"`
 	Policy   string   `json:"policy,omitempty" yaml:"policy,omitempty"`
