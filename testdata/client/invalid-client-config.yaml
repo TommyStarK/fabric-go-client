@@ -13,9 +13,6 @@ channels:
   - name: channelall
     anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channelall.tx
     configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx
-  - name: channel12
-    anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channel12.tx
-    configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channel12.tx
 chaincodes:
   name: sacc
   path: github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/sacc
