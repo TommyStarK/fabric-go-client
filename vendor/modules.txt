@@ -69,6 +69,7 @@ github.com/hyperledger/fabric-config/protolator/protoext/peerext
 # github.com/hyperledger/fabric-lib-go v1.0.0
 github.com/hyperledger/fabric-lib-go/healthz
 # github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23
+## explicit
 github.com/hyperledger/fabric-protos-go/common
 github.com/hyperledger/fabric-protos-go/discovery
 github.com/hyperledger/fabric-protos-go/gossip
@@ -232,6 +233,7 @@ github.com/hyperledger/fabric-sdk-go/pkg/util/concurrent/rollingcounter
 github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar
 github.com/hyperledger/fabric-sdk-go/pkg/util/test
 github.com/hyperledger/fabric-sdk-go/test/metadata
+github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 github.com/kr/logfmt
 # github.com/magiconair/properties v1.8.1
