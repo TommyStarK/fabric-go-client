@@ -1,6 +1,5 @@
-version: 1.0.0
 organization: Org1
-sdkConfigPath: ./testdata/sdk/sdk-config.yaml
+connectionProfile: ./testdata/sdk/connection-profile.yaml
 identities:
   admin:
     username: Admin

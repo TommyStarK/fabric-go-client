@@ -69,7 +69,7 @@ func NewClientFromConfigFile(configPath string) (*Client, error) {
 
 // NewClient returns a Client instance.
 func NewClient(cfg *Config) (*Client, error) {
-	sdk, err := fabsdk.New(config.FromFile(cfg.SDKConfigPath))
+	sdk, err := fabsdk.New(config.FromFile(cfg.ConnectionProfile))
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +142,9 @@ func (client *Client) bindChannel(channelID string) error {
 // Config returns the client configuration
 func (client *Client) Config() *Config {
 	config := &Config{
-		Chaincodes: make([]Chaincode, len(client.config.Chaincodes)),
-		Channels:   make([]Channel, len(client.config.Channels)),
+		Chaincodes:        make([]Chaincode, len(client.config.Chaincodes)),
+		Channels:          make([]Channel, len(client.config.Channels)),
+		ConnectionProfile: client.config.ConnectionProfile,
 		Identities: struct {
 			Admin Identity   `json:"admin" yaml:"admin"`
 			Users []Identity `json:"users" yaml:"users"`
@@ -155,9 +156,7 @@ func (client *Client) Config() *Config {
 			},
 			Users: make([]Identity, len(client.config.Identities.Users)),
 		},
-		Organization:  client.config.Organization,
-		Version:       client.config.Version,
-		SDKConfigPath: client.config.SDKConfigPath,
+		Organization: client.config.Organization,
 	}
 
 	copy(config.Identities.Users, client.config.Identities.Users)

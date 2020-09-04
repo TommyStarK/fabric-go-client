@@ -12,15 +12,14 @@ import (
 
 // Config holds the client configuration
 type Config struct {
-	Chaincodes []Chaincode `json:"chaincodes" yaml:"chaincodes"`
-	Channels   []Channel   `json:"channels" yaml:"channels"`
-	Identities struct {
+	Chaincodes        []Chaincode `json:"chaincodes" yaml:"chaincodes"`
+	Channels          []Channel   `json:"channels" yaml:"channels"`
+	ConnectionProfile string      `json:"connectionProfile" yaml:"connectionProfile"`
+	Identities        struct {
 		Admin Identity   `json:"admin" yaml:"admin"`
 		Users []Identity `json:"users" yaml:"users"`
 	} `json:"identities" yaml:"identities"`
-	Organization  string `json:"organization" yaml:"organization"`
-	SDKConfigPath string `json:"sdkConfigPath" yaml:"sdkConfigPath"`
-	Version       string `json:"version" yaml:"version"`
+	Organization string `json:"organization" yaml:"organization"`
 }
 
 // NewConfigFromFile returns a new client config
