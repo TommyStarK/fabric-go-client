@@ -31,6 +31,11 @@ func TestChannelResourceManagement(t *testing.T) {
 	channelManagementFailureCases(t, org1client)
 }
 
+func TestChaincodeContractAPIManagement(t *testing.T) {
+	installChaincodeContractAPI(t, org1client)
+	chaincodeManagementFailureCases(t, org1client)
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }

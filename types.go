@@ -26,11 +26,13 @@ type Block struct {
 
 // Chaincode describes info of a chaincode
 type Chaincode struct {
-	InitArgs []string `json:"initArgs" yaml:"initArgs"`
-	Name     string   `json:"name" yaml:"name"`
-	Path     string   `json:"path" yaml:"path"`
-	Policy   string   `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Version  string   `json:"version" yaml:"version"`
+	InitArgs             []string `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`
+	InitRequired         bool     `json:"initRequired" yaml:"initRequired"`
+	MustBeApprovedByOrgs []string `json:"mustBeApprovedByOrgs" yaml:"mustBeApprovedByOrgs"`
+	Name                 string   `json:"name" yaml:"name"`
+	Path                 string   `json:"path" yaml:"path"`
+	Role                 string   `json:"role" yaml:"role"`
+	Version              string   `json:"version" yaml:"version"`
 }
 
 // ChaincodeCall contains the ID of the chaincode as well as an optional set of private data collections that may be accessed by the chaincode
