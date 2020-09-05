@@ -15,7 +15,7 @@ do
   sleep 5;
 done
 
-docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d peer0.org1.dummy.com;
+docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d peer0.org1.dummy.com peer0.org2.dummy.com;
 sleep 5;
 
 check=$(docker ps -aq -f status=exited  | wc -l);
@@ -36,8 +36,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME down;
-docker ps -a | grep "dev-peer0.org1.dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $1}'| $XARGS docker rm -f;
-docker images | grep "dev-peer0.org1.dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $3}'| $XARGS docker rmi -f;
+docker ps -a | grep "dev-peer0.\(org1\|org2\).dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $1}'| $XARGS docker rm -f;
+docker images | grep "dev-peer0.\(org1\|org2\).dummy.com-fcacc_\(1.0\|2.0\)" | awk '{print $3}'| $XARGS docker rmi -f;
 docker rmi -f fabclient;
 docker volume prune -f;
 docker network prune -f;
