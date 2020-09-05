@@ -5,10 +5,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
-// Client enables:
-// - managing resources in Fabric network
-// - access to a channel on a Fabric network.
-// - ledger queries on a Fabric network.
+// Client API enables to manage resources in a Fabric network, access to a channel,
+// perform chaincode related operations.
 type Client struct {
 	config          *Config
 	fabricSDK       *fabsdk.FabricSDK
@@ -121,12 +119,12 @@ func (client *Client) IsChaincodeInstalled(packageID string) bool {
 	return client.resourceManager.isChaincodeInstalled(packageID)
 }
 
-// IsChaincodeApproved returns whether the given chaincode has been approved on the specified channel.
+// IsChaincodeApproved returns whether the given chaincode has been approved or not.
 func (client *Client) IsChaincodeApproved(channelID, chaincodeName string, sequence int64) bool {
 	return client.resourceManager.isChaincodeApproved(channelID, chaincodeName, sequence)
 }
 
-// IsChaincodeCommitted returns whether the given chaincode has been committed on the specified channel.
+// IsChaincodeCommitted returns whether the given chaincode has been committed or not.
 func (client *Client) IsChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool {
 	return client.resourceManager.isChaincodeCommitted(channelID, chaincodeName, sequence)
 }

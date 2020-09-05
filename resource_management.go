@@ -35,7 +35,7 @@ type resourceManagementClient struct {
 	peers                  []fab.Peer
 	withOrdererEndpointOpt resmgmt.RequestOption
 	withRetryOpt           resmgmt.RequestOption
-	withTargetsPeersOpt    resmgmt.RequestOption
+	withTargetPeersOpt     resmgmt.RequestOption
 }
 
 func newResourceManager(ctx context.ClientProvider, identity mspprovider.SigningIdentity) (resourceManager, error) {
@@ -66,7 +66,7 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 		peers:                  peers,
 		withOrdererEndpointOpt: resmgmt.WithOrdererEndpoint(randomOrderer),
 		withRetryOpt:           resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-		withTargetsPeersOpt:    resmgmt.WithTargets(peers...),
+		withTargetPeersOpt:     resmgmt.WithTargets(peers...),
 	}
 
 	return rsmClient, nil
@@ -91,7 +91,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 }
 
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
-	err := rsm.client.JoinChannel(channelID, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
+	err := rsm.client.JoinChannel(channelID, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil && !strings.Contains(err.Error(), _channelAlreadyJoined) {
 		return fmt.Errorf("failed to join channel '%s': %w", channelID, err)
 	}
@@ -120,7 +120,7 @@ func (rsm *resourceManagementClient) lifecycleInstallChaincode(chaincode Chainco
 		Package: chaincodePackage,
 	}
 
-	res, err := rsm.client.LifecycleInstallCC(request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
+	res, err := rsm.client.LifecycleInstallCC(request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil {
 		return "", err
 	}
@@ -150,13 +150,13 @@ func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packag
 		InitRequired:      chaincode.InitRequired,
 	}
 
-	txID, err := rsm.client.LifecycleApproveCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
+	txID, err := rsm.client.LifecycleApproveCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil {
-		return fmt.Errorf("channel '%s', failed to approve chaincode '%s': %w", channelID, chaincode.Name, err)
+		return fmt.Errorf("failed to approve chaincode '%s': %w", chaincode.Name, err)
 	}
 
 	if len(txID) == 0 {
-		return fmt.Errorf("unexpected error occurred on channel '%s', failed to approve chaincode '%s'", channelID, chaincode.Name)
+		return fmt.Errorf("unexpected error occurred, failed to approve chaincode '%s'", chaincode.Name)
 	}
 
 	return nil
@@ -174,9 +174,9 @@ func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(chan
 		InitRequired:      chaincode.InitRequired,
 	}
 
-	response, err := rsm.client.LifecycleCheckCCCommitReadiness(channelID, request, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
+	response, err := rsm.client.LifecycleCheckCCCommitReadiness(channelID, request, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil {
-		return nil, fmt.Errorf("channel '%s', failed to check commit readiness for chaincode '%s': %w", channelID, chaincode.Name, err)
+		return nil, fmt.Errorf("failed to check the commit readiness for chaincode '%s': %w", chaincode.Name, err)
 	}
 
 	return response.Approvals, nil
@@ -195,11 +195,11 @@ func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, 
 
 	txID, err := rsm.client.LifecycleCommitCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt)
 	if err != nil {
-		return fmt.Errorf("channel '%s', failed to commit chaincode '%s': %w", channelID, chaincode.Name, err)
+		return fmt.Errorf("failed to commit chaincode '%s': %w", chaincode.Name, err)
 	}
 
 	if len(txID) == 0 {
-		return fmt.Errorf("unexpected error occurred on channel '%s', failed to commit chaincode '%s'", channelID, chaincode.Name)
+		return fmt.Errorf("unexpected error occurred, failed to commit chaincode '%s'", chaincode.Name)
 	}
 
 	return nil

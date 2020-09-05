@@ -88,9 +88,6 @@ func org1InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 	if !ok || !ready {
 		t.Errorf("chaincode '%s' should be ready to be committed for Org1MSP", chaincode.Name)
 	}
-	// if err := client.LifecycleCommitChaincode(channel.Name, 1, chaincode); err != nil {
-	// 	t.Fatal(err)
-	// }
 }
 
 func org2InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {

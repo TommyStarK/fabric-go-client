@@ -52,7 +52,7 @@ func NewConfigFromFile(configPath string) (*Config, error) {
 			return nil, fmt.Errorf("failed to create client configuration from file %s: %w", configPath, err)
 		}
 	default:
-		return nil, errors.New("invalid client configuration file extension, supported: .json .yml .yaml")
+		return nil, errors.New("invalid client configuration file extension, supported: .json|.yml|.yaml")
 	}
 
 	return config, nil
