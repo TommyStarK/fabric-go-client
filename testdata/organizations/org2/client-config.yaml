@@ -1,0 +1,27 @@
+organization: Org2
+connectionProfile: ./testdata/organizations/org2/connection-profile.yaml
+identities:
+  admin:
+    username: Admin
+    certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org2.dummy.com/users/Admin@org2.dummy.com/msp/signcerts/Admin@org2.dummy.com-cert.pem
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org2.dummy.com/users/Admin@org2.dummy.com/msp/keystore/priv_sk
+  users:
+  - username: User1
+    certificate: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org2.dummy.com/users/User1@org2.dummy.com/msp/signcerts/User1@org2.dummy.com-cert.pem
+    privateKey: ./testdata/hyperledger-fabric-network/crypto-config/peerOrganizations/org2.dummy.com/users/User1@org2.dummy.com/msp/keystore/priv_sk
+channels:
+  - name: channelall
+    anchorPeerConfigPath: ./testdata/hyperledger-fabric-network/channel-artifacts/Org2MSPanchors_channelall.tx
+    configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx
+chaincodes:
+  - name: fcacc
+    initArgs:
+        - Init
+    initRequired: true
+    mustBeApprovedByOrgs:
+      - Org1MSP
+      - Org2MSP
+    path: /go/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
+    role: member
+    version: 1.0
+

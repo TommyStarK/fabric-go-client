@@ -1,6 +1,6 @@
 {
   "organization": "Org1",
-  "connectionProfile": "./testdata/sdk/connection-profile.yaml",
+  "connectionProfile": "./testdata/organizations/org1/connection-profile.yaml",
   "identities": {
     "admin": {
       "username": "Admin",
@@ -20,11 +20,6 @@
       "name": "channelall",
       "anchorPeerConfigPath": "./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channelall.tx",
       "configPath": "./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx"
-    },
-    {
-      "name": "channel12",
-      "anchorPeerConfigPath": "./testdata/hyperledger-fabric-network/channel-artifacts/Org1MSPanchors_channel12.tx",
-      "configPath": "./testdata/hyperledger-fabric-network/channel-artifacts/channel12.tx"
     }
   ],
   "chaincodes": [
@@ -35,7 +30,8 @@
       ],
       "initRequired": true,
       "mustBeApprovedByOrgs": [
-        "Org1MSP"
+        "Org1MSP",
+        "Org2MSP"
       ],
       "path": "/go/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc",
       "role": "member",
