@@ -96,8 +96,7 @@ func (client *Client) JoinChannel(channelID string) error {
 	return client.resourceManager.joinChannel(channelID)
 }
 
-// LifecycleInstallChaincode installs a chaincode package using Fabric 2.0 chaincode lifecycle.
-// It returns the chaincode package ID if the install succeeded.
+// LifecycleInstallChaincode installs a chaincode package using Fabric 2.0 chaincode lifecycle. Returns the chaincode package ID if the install succeeded.
 func (client *Client) LifecycleInstallChaincode(chaincode Chaincode) (string, error) {
 	return client.resourceManager.lifecycleInstallChaincode(chaincode)
 }
@@ -107,8 +106,8 @@ func (client *Client) LifecycleApproveChaincode(channelID, packageID string, seq
 	return client.resourceManager.lifecycleApproveChaincode(channelID, packageID, sequence, chaincode)
 }
 
-// LifecyleCheckChaincodeCommitReadiness returns wheter the given chaincode is ready to be committed on the specified channel.
-func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) bool {
+// LifecyleCheckChaincodeCommitReadiness checks the 'commit readiness' of a chaincode. Returns a map holding the org approvals.
+func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error) {
 	return client.resourceManager.lifecycleCheckChaincodeCommitReadiness(channelID, packageID, sequence, chaincode)
 }
 
@@ -117,12 +116,17 @@ func (client *Client) LifecycleCommitChaincode(channelID string, sequence int64,
 	return client.resourceManager.lifecycleCommitChaincode(channelID, sequence, chaincode)
 }
 
-// IsLifecycleChaincodeInstalled returns whether the given chaincode has been installed or not using the chaincode package ID.
-func (client *Client) IsLifecycleChaincodeInstalled(packageID string) bool {
-	return client.resourceManager.isLifecycleChaincodeInstalled(packageID)
+// IsChaincodeInstalled returns whether the given chaincode has been installed or not.
+func (client *Client) IsChaincodeInstalled(packageID string) bool {
+	return client.resourceManager.isChaincodeInstalled(packageID)
 }
 
-// IsLifecycleChaincodeApproved returns whether the given chaincode has been approved on the specified channel.
-func (client *Client) IsLifecycleChaincodeApproved(channelID, chaincodeName string, sequence int64) bool {
-	return client.resourceManager.isLifecycleChaincodeApproved(channelID, chaincodeName, sequence)
+// IsChaincodeApproved returns whether the given chaincode has been approved on the specified channel.
+func (client *Client) IsChaincodeApproved(channelID, chaincodeName string, sequence int64) bool {
+	return client.resourceManager.isChaincodeApproved(channelID, chaincodeName, sequence)
+}
+
+// IsChaincodeCommitted returns whether the given chaincode has been committed on the specified channel.
+func (client *Client) IsChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool {
+	return client.resourceManager.isChaincodeCommitted(channelID, chaincodeName, sequence)
 }

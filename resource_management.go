@@ -22,18 +22,20 @@ type resourceManager interface {
 	joinChannel(channelID string) error
 	lifecycleInstallChaincode(chaincode Chaincode) (string, error)
 	lifecycleApproveChaincode(channelID, packageID string, sequence int64, chaincode Chaincode) error
-	lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) bool
+	lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error)
 	lifecycleCommitChaincode(channelID string, sequence int64, chaincode Chaincode) error
-	isLifecycleChaincodeInstalled(packageID string) bool
-	isLifecycleChaincodeApproved(channelID, chaincodeName string, sequence int64) bool
+	isChaincodeInstalled(packageID string) bool
+	isChaincodeApproved(channelID, chaincodeName string, sequence int64) bool
+	isChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool
 }
 
 type resourceManagementClient struct {
-	adminIdentity mspprovider.SigningIdentity
-	client        *resmgmt.Client
-	defaultOpts   []resmgmt.RequestOption
-	orderers      map[string]fab.OrdererConfig
-	peers         []fab.Peer
+	adminIdentity          mspprovider.SigningIdentity
+	client                 *resmgmt.Client
+	peers                  []fab.Peer
+	withOrdererEndpointOpt resmgmt.RequestOption
+	withRetryOpt           resmgmt.RequestOption
+	withTargetsPeersOpt    resmgmt.RequestOption
 }
 
 func newResourceManager(ctx context.ClientProvider, identity mspprovider.SigningIdentity) (resourceManager, error) {
@@ -59,15 +61,12 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	}
 
 	rsmClient := &resourceManagementClient{
-		adminIdentity: identity,
-		client:        client,
-		defaultOpts: []resmgmt.RequestOption{
-			resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-			resmgmt.WithTargets(peers...),
-			resmgmt.WithOrdererEndpoint(randomOrderer),
-		},
-		orderers: localContext.EndpointConfig().NetworkConfig().Orderers,
-		peers:    peers,
+		adminIdentity:          identity,
+		client:                 client,
+		peers:                  peers,
+		withOrdererEndpointOpt: resmgmt.WithOrdererEndpoint(randomOrderer),
+		withRetryOpt:           resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+		withTargetsPeersOpt:    resmgmt.WithTargets(peers...),
 	}
 
 	return rsmClient, nil
@@ -82,7 +81,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 		SigningIdentities: []mspprovider.SigningIdentity{rsm.adminIdentity},
 	}
 
-	if _, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
+	if _, err := rsm.client.SaveChannel(request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyExists) {
 			return fmt.Errorf("failed to save channel '%s': %w", channelID, err)
 		}
@@ -92,7 +91,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 }
 
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
-	err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...)
+	err := rsm.client.JoinChannel(channelID, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
 	if err != nil && !strings.Contains(err.Error(), _channelAlreadyJoined) {
 		return fmt.Errorf("failed to join channel '%s': %w", channelID, err)
 	}
@@ -121,7 +120,7 @@ func (rsm *resourceManagementClient) lifecycleInstallChaincode(chaincode Chainco
 		Package: chaincodePackage,
 	}
 
-	res, err := rsm.client.LifecycleInstallCC(request, rsm.defaultOpts...)
+	res, err := rsm.client.LifecycleInstallCC(request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
 	if err != nil {
 		return "", err
 	}
@@ -151,7 +150,7 @@ func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packag
 		InitRequired:      chaincode.InitRequired,
 	}
 
-	txID, err := rsm.client.LifecycleApproveCC(channelID, request, rsm.defaultOpts...)
+	txID, err := rsm.client.LifecycleApproveCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
 	if err != nil {
 		return fmt.Errorf("channel '%s', failed to approve chaincode '%s': %w", channelID, chaincode.Name, err)
 	}
@@ -163,12 +162,7 @@ func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packag
 	return nil
 }
 
-func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) bool {
-	count := 0
-	success := true
-	checkChan := make(chan bool)
-	numberOfPeers := len(rsm.peers)
-
+func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error) {
 	request := resmgmt.LifecycleCheckCCCommitReadinessRequest{
 		Name:              chaincode.Name,
 		Version:           chaincode.Version,
@@ -180,49 +174,12 @@ func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(chan
 		InitRequired:      chaincode.InitRequired,
 	}
 
-	for _, p := range rsm.peers {
-		peer := p
-
-		go func() {
-			response, err := rsm.client.LifecycleCheckCCCommitReadiness(channelID, request, resmgmt.WithTargets(peer))
-			if err != nil {
-				checkChan <- false
-				return
-			}
-
-			for _, org := range chaincode.MustBeApprovedByOrgs {
-				ready, ok := response.Approvals[org]
-				if !ok {
-					checkChan <- false
-					return
-				}
-
-				if !ready {
-					checkChan <- false
-					return
-				}
-			}
-
-			checkChan <- true
-			return
-		}()
+	response, err := rsm.client.LifecycleCheckCCCommitReadiness(channelID, request, rsm.withRetryOpt, rsm.withTargetsPeersOpt)
+	if err != nil {
+		return nil, fmt.Errorf("channel '%s', failed to check commit readiness for chaincode '%s': %w", channelID, chaincode.Name, err)
 	}
 
-	for {
-		select {
-		case witness := <-checkChan:
-			if !witness {
-				success = false
-			}
-
-			count++
-			if count == numberOfPeers {
-				close(checkChan)
-				return success
-			}
-		default:
-		}
-	}
+	return response.Approvals, nil
 }
 
 func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, sequence int64, chaincode Chaincode) error {
@@ -236,7 +193,7 @@ func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, 
 		InitRequired:      chaincode.InitRequired,
 	}
 
-	txID, err := rsm.client.LifecycleCommitCC(channelID, request, rsm.defaultOpts...)
+	txID, err := rsm.client.LifecycleCommitCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt)
 	if err != nil {
 		return fmt.Errorf("channel '%s', failed to commit chaincode '%s': %w", channelID, chaincode.Name, err)
 	}
@@ -248,7 +205,7 @@ func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, 
 	return nil
 }
 
-func (rsm *resourceManagementClient) isLifecycleChaincodeInstalled(packageID string) bool {
+func (rsm *resourceManagementClient) isChaincodeInstalled(packageID string) bool {
 	count := 0
 	success := true
 	checkChan := make(chan bool)
@@ -294,7 +251,7 @@ func (rsm *resourceManagementClient) isLifecycleChaincodeInstalled(packageID str
 	}
 }
 
-func (rsm *resourceManagementClient) isLifecycleChaincodeApproved(channelID, chaincodeName string, sequence int64) bool {
+func (rsm *resourceManagementClient) isChaincodeApproved(channelID, chaincodeName string, sequence int64) bool {
 	count := 0
 	success := true
 	checkChan := make(chan bool)
@@ -316,6 +273,56 @@ func (rsm *resourceManagementClient) isLifecycleChaincodeApproved(channelID, cha
 			}
 
 			checkChan <- response.Name == chaincodeName && response.Sequence == sequence
+			return
+		}()
+	}
+
+	for {
+		select {
+		case witness := <-checkChan:
+			if !witness {
+				success = false
+			}
+
+			count++
+			if count == numberOfPeers {
+				close(checkChan)
+				return success
+			}
+		default:
+		}
+	}
+}
+
+func (rsm *resourceManagementClient) isChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool {
+	count := 0
+	success := true
+	checkChan := make(chan bool)
+	numberOfPeers := len(rsm.peers)
+
+	request := resmgmt.LifecycleQueryCommittedCCRequest{
+		Name: chaincodeName,
+	}
+
+	for _, p := range rsm.peers {
+		peer := p
+
+		go func() {
+			response, err := rsm.client.LifecycleQueryCommittedCC(channelID, request, resmgmt.WithTargets(peer))
+			if err != nil {
+				checkChan <- false
+				return
+			}
+
+			found := false
+			for _, res := range response {
+				if res.Name == chaincodeName && res.Sequence == sequence {
+					found = true
+					break
+				}
+			}
+
+			checkChan <- found
 			return
 		}()
 	}
