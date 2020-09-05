@@ -43,10 +43,8 @@ func (chls channelsHandlers) find(channelName string) handlers {
 	return nil
 }
 
-// Client enables:
-// - managing resources in Fabric network
-// - access to a channel on a Fabric network.
-// - ledger queries on a Fabric network.
+// Client API enables to manage resources in a Fabric network, access to a channel,
+// perform chaincode related operations.
 type Client struct {
 	config           *Config
 	fabricSDK        *fabsdk.FabricSDK
@@ -194,7 +192,7 @@ func (client *Client) IsChaincodeInstalled(chaincodeName string) bool {
 	return client.resourceManager.isChaincodeInstalled(chaincodeName)
 }
 
-// IsChaincodeInstantiated returns whether the given chaincode has been instantiated on the specified channel or not.
+// IsChaincodeInstantiated returns whether the given chaincode has been instantiated or not.
 func (client *Client) IsChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion string) bool {
 	return client.resourceManager.isChaincodeInstantiated(channelID, chaincodeName, chaincodeVersion)
 }

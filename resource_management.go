@@ -27,10 +27,12 @@ type resourceManager interface {
 }
 
 type resourceManagementClient struct {
-	adminIdentity mspprovider.SigningIdentity
-	client        *resmgmt.Client
-	defaultOpts   []resmgmt.RequestOption
-	peers         []fab.Peer
+	adminIdentity          mspprovider.SigningIdentity
+	client                 *resmgmt.Client
+	peers                  []fab.Peer
+	withOrdererEndpointOpt resmgmt.RequestOption
+	withRetryOpt           resmgmt.RequestOption
+	withTargetPeersOpt     resmgmt.RequestOption
 }
 
 func newResourceManager(ctx context.ClientProvider, identity mspprovider.SigningIdentity) (resourceManager, error) {
@@ -49,14 +51,19 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 		return nil, err
 	}
 
+	var randomOrderer string
+	for orderer := range localContext.EndpointConfig().NetworkConfig().Orderers {
+		randomOrderer = orderer
+		break
+	}
+
 	rsmClient := &resourceManagementClient{
-		adminIdentity: identity,
-		client:        client,
-		defaultOpts: []resmgmt.RequestOption{
-			resmgmt.WithRetry(retry.DefaultResMgmtOpts),
-			resmgmt.WithTargets(peers...),
-		},
-		peers: peers,
+		adminIdentity:          identity,
+		client:                 client,
+		peers:                  peers,
+		withOrdererEndpointOpt: resmgmt.WithOrdererEndpoint(randomOrderer),
+		withRetryOpt:           resmgmt.WithRetry(retry.DefaultResMgmtOpts),
+		withTargetPeersOpt:     resmgmt.WithTargets(peers...),
 	}
 
 	return rsmClient, nil
@@ -71,7 +78,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 		SigningIdentities: []mspprovider.SigningIdentity{rsm.adminIdentity},
 	}
 
-	if _, err := rsm.client.SaveChannel(request, resmgmt.WithRetry(retry.DefaultResMgmtOpts)); err != nil {
+	if _, err := rsm.client.SaveChannel(request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt); err != nil {
 		if !strings.Contains(err.Error(), _channelAlreadyExists) {
 			return fmt.Errorf("failed to save channel '%s': %w", channelID, err)
 		}
@@ -81,7 +88,7 @@ func (rsm *resourceManagementClient) saveChannel(channelID, channelConfigPath st
 }
 
 func (rsm *resourceManagementClient) joinChannel(channelID string) error {
-	err := rsm.client.JoinChannel(channelID, rsm.defaultOpts...)
+	err := rsm.client.JoinChannel(channelID, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil && !strings.Contains(err.Error(), _channelAlreadyJoined) {
 		return fmt.Errorf("failed to join channel '%s': %w", channelID, err)
 	}
@@ -103,7 +110,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 		Package: ccPackage,
 	}
 
-	res, err := rsm.client.InstallCC(request, rsm.defaultOpts...)
+	res, err := rsm.client.InstallCC(request, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil {
 		return fmt.Errorf("failed to install chaincode '%s' (version: %s): %w", chaincode.Name, chaincode.Version, err)
 	}
