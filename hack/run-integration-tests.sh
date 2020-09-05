@@ -26,13 +26,13 @@ if [[ "$check" -ne 0 ]]; then
 fi
 
 docker run --rm --network=${COMPOSE_PROJECT_NAME}_default -v `pwd`:/go/src/github.com/TommyStarK/fabric-go-client \
-  fabclient bash -c "go test -v -race -failfast --cover -covermode=atomic -coverprofile=coverage.out -mod=vendor; exit $?";
+  fabclient bash -c "go test -v -race -failfast --cover -covermode=atomic -coverprofile=coverage.out -mod=vendor";
 
 rc=$?;
 
-XARGS="xargs -r"
+XARGS="xargs -r";
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  XARGS="xargs"
+  XARGS="xargs";
 fi
 
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME down;
