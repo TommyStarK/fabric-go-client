@@ -58,6 +58,11 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
+// Close frees up caches and connections being maintained by the SDK.
+func (client *Client) Close() {
+	client.fabricSDK.Close()
+}
+
 // Config returns the client configuration.
 func (client *Client) Config() *Config {
 	config := &Config{

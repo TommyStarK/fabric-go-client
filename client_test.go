@@ -54,6 +54,11 @@ func TestChaincodeManagementFailureCases(t *testing.T) {
 	chaincodeManagementFailureCases(t, org1client)
 }
 
+func TestCloseClient(t *testing.T) {
+	org1client.Close()
+	org2client.Close()
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
