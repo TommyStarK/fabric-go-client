@@ -11,6 +11,8 @@ func Example() {
 		log.Fatal(err)
 	}
 
+	defer client.Close()
+
 	channel := client.Config().Channels[0]
 	chaincode := client.Config().Chaincodes[0]
 

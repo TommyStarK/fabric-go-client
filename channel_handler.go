@@ -15,6 +15,7 @@ import (
 type channelHandler interface {
 	invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error)
 	query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error)
+	queryBlock(blockNumber uint64) (*Block, error)
 	queryBlockByTxID(txID string) (*Block, error)
 	registerChaincodeEvent(chaincodeID, eventFilter string) (<-chan *ChaincodeEvent, error)
 	unregisterChaincodeEvent(eventFilter string)
@@ -72,6 +73,11 @@ func (chn *channelHandlerClient) invoke(request *ChaincodeRequest, opts ...Optio
 func (chn *channelHandlerClient) query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
 	response, err := chn.client.Query(convertChaincodeRequest(request), convertOptions(opts...)...)
 	return convertChaincodeTransactionResponse(response), err
+}
+
+func (chn *channelHandlerClient) queryBlock(blockNumber uint64) (*Block, error) {
+	block, err := chn.underlyingLedger.QueryBlock(blockNumber)
+	return convertBlock(block), err
 }
 
 func (chn *channelHandlerClient) queryBlockByTxID(txID string) (*Block, error) {

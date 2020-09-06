@@ -73,11 +73,16 @@ func TestChaincodeShimAPIManagement(t *testing.T) {
 func TestChaincodeOperations(t *testing.T) {
 	writeToLedger(t, org1client)
 	readFromLedger(t, org1client)
+	queryBlock(t, org1client)
 	queryBlockByTxID(t, org1client)
 	registerChaincodeEvent(t, org1client)
 	chaincodeEventTimeout(t, org1client)
 	chaincodeOpsFailureCases(t, org1client)
 	testConvertChaincodeRequest(t)
+}
+
+func TestCloseClient(t *testing.T) {
+	org1client.Close()
 }
 
 func TestMain(m *testing.M) {

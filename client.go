@@ -137,6 +137,11 @@ func (client *Client) bindChannel(channelID string) error {
 	return nil
 }
 
+// Close frees up caches and connections being maintained by the SDK.
+func (client *Client) Close() {
+	client.fabricSDK.Close()
+}
+
 // Config returns the client configuration.
 func (client *Client) Config() *Config {
 	config := &Config{
@@ -213,6 +218,15 @@ func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*Transac
 		return nil, err
 	}
 	return handler.query(request, opts...)
+}
+
+// QueryBlock queries the ledger for Block by block number.
+func (client *Client) QueryBlock(blockNumber uint64, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.queryBlock(blockNumber)
 }
 
 // QueryBlockByTxID queries for block which contains a transaction.

@@ -53,6 +53,12 @@ func readFromLedger(t *testing.T, client *Client) {
 	}
 }
 
+func queryBlock(t *testing.T, client *Client) {
+	if _, err := client.QueryBlock(1); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func queryBlockByTxID(t *testing.T, client *Client) {
 	if _, err := client.QueryBlockByTxID(txID); err != nil {
 		t.Fatal(err)
