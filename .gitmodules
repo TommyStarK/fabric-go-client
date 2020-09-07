@@ -4,4 +4,4 @@
 [submodule "testdata/hyperledger-fabric-network"]
 	path = testdata/hyperledger-fabric-network
 	url = https://github.com/TommyStarK/hyperledger-fabric-network
-	branch = v1.4
+	branch = v1.4-solo-raft

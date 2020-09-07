@@ -2,6 +2,7 @@ package fabclient
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -55,6 +56,10 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	for orderer := range localContext.EndpointConfig().NetworkConfig().Orderers {
 		randomOrderer = orderer
 		break
+	}
+
+	if len(os.Getenv("TARGET_ORDERER")) > 0 {
+		randomOrderer = os.Getenv("TARGET_ORDERER")
 	}
 
 	rsmClient := &resourceManagementClient{
