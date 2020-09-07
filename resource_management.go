@@ -61,8 +61,8 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 		break
 	}
 
-	if len(os.Getenv("BUILD_NUMBER")) > 0 {
-		randomOrderer = "orderer.dummy.com"
+	if len(os.Getenv("TARGET_ORDERER")) > 0 {
+		randomOrderer = os.Getenv("TARGET_ORDERER")
 	}
 
 	rsmClient := &resourceManagementClient{

@@ -15,7 +15,7 @@ if [[ "$check" -ne 0 ]]; then
   exit 1;
 fi
 
-docker run --rm --network=${COMPOSE_PROJECT_NAME}_test -e BUILD_NUMBER=${BUILD_NUMBER} -v `pwd`:/go/src/github.com/TommyStarK/fabric-go-client \
+docker run --rm --network=${COMPOSE_PROJECT_NAME}_test -e TARGET_ORDERER="orderer.dummy.com" -v `pwd`:/go/src/github.com/TommyStarK/fabric-go-client \
   fabclient bash -c "go test -v -race -failfast --cover -covermode=atomic -coverprofile=coverage.out -mod=vendor";
 
 rc=$?;
