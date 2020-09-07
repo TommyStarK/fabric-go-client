@@ -16,7 +16,7 @@ do
 done
 
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d peer0.org1.dummy.com peer0.org2.dummy.com;
-sleep 5;
+sleep 60;
 
 check=$(docker ps -aq -f status=exited  | wc -l);
 check=${check##*( )};
