@@ -2,6 +2,7 @@ package fabclient
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/hyperledger/fabric-protos-go/common"
@@ -58,6 +59,10 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 	for orderer := range localContext.EndpointConfig().NetworkConfig().Orderers {
 		randomOrderer = orderer
 		break
+	}
+
+	if len(os.Getenv("BUILD_NUMBER")) > 0 {
+		randomOrderer = "orderer.dummy.com"
 	}
 
 	rsmClient := &resourceManagementClient{
