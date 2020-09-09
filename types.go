@@ -58,6 +58,7 @@ type ChaincodeRequest struct {
 	Args            []string
 	TransientMap    map[string][]byte
 	InvocationChain []*ChaincodeCall
+	IsInit          bool
 }
 
 // Channel describes a channel configuration.

@@ -1,17 +1,58 @@
 package fabclient
 
 import (
+	"errors"
+	"fmt"
+	"sync"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
+type handler struct {
+	username string
+	handler  channelHandler
+}
+
+type handlers []handler
+
+func (hls handlers) find(username string) channelHandler {
+	for _, h := range hls {
+		if h.username == username {
+			return h.handler
+		}
+	}
+
+	return nil
+}
+
+type channelHandlers struct {
+	channelName string
+	handlers    handlers
+}
+
+type channelsHandlers []channelHandlers
+
+func (chls channelsHandlers) find(channelName string) handlers {
+	for _, c := range chls {
+		if c.channelName == channelName {
+			return c.handlers
+		}
+	}
+
+	return nil
+}
+
 // Client API enables to manage resources in a Fabric network, access to a channel,
 // perform chaincode related operations.
 type Client struct {
-	config          *Config
-	fabricSDK       *fabsdk.FabricSDK
-	msp             membershipServiceProvider
-	resourceManager resourceManager
+	config           *Config
+	fabricSDK        *fabsdk.FabricSDK
+	msp              membershipServiceProvider
+	resourceManager  resourceManager
+	channelsHandlers channelsHandlers
+
+	mutex sync.RWMutex
 }
 
 // NewClientFromConfigFile returns a client instance from a config file.
@@ -49,13 +90,51 @@ func NewClient(cfg *Config) (*Client, error) {
 	}
 
 	client := &Client{
-		config:          cfg,
-		fabricSDK:       sdk,
-		msp:             msp,
-		resourceManager: rsm,
+		config:           cfg,
+		fabricSDK:        sdk,
+		msp:              msp,
+		resourceManager:  rsm,
+		channelsHandlers: make(channelsHandlers, 0, len(cfg.Channels)),
+		mutex:            sync.RWMutex{},
 	}
 
 	return client, nil
+}
+
+func (client *Client) bindChannel(channelID string) error {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+
+	if handlers := client.channelsHandlers.find(channelID); handlers != nil {
+		return nil
+	}
+
+	handlers := make(handlers, 0, len(client.config.Identities.Users))
+	for _, user := range client.config.Identities.Users {
+		userIdentity, err := client.msp.createSigningIdentity(user.Certificate, user.PrivateKey)
+		if err != nil {
+			return err
+		}
+
+		userContext := client.fabricSDK.ChannelContext(channelID, fabsdk.WithIdentity(userIdentity))
+
+		chHandler, err := newChannelHandler(userContext)
+		if err != nil {
+			return fmt.Errorf("failed to bind channel '%s' to client: %w", channelID, err)
+		}
+
+		handlers = append(handlers, handler{
+			username: user.Username,
+			handler:  chHandler,
+		})
+	}
+
+	client.channelsHandlers = append(client.channelsHandlers, channelHandlers{
+		channelName: channelID,
+		handlers:    handlers,
+	})
+
+	return nil
 }
 
 // Close frees up caches and connections being maintained by the SDK.
@@ -96,7 +175,11 @@ func (client *Client) SaveChannel(channelID, channelConfigPath string) error {
 
 // JoinChannel allows for peers to join existing channel.
 func (client *Client) JoinChannel(channelID string) error {
-	return client.resourceManager.joinChannel(channelID)
+	if err := client.resourceManager.joinChannel(channelID); err != nil {
+		return err
+	}
+
+	return client.bindChannel(channelID)
 }
 
 // LifecycleInstallChaincode installs a chaincode package using Fabric 2.0 chaincode lifecycle. Returns the chaincode package ID if the install succeeded.
@@ -132,4 +215,106 @@ func (client *Client) IsChaincodeApproved(channelID, chaincodeName string, seque
 // IsChaincodeCommitted returns whether the given chaincode has been committed or not.
 func (client *Client) IsChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool {
 	return client.resourceManager.isChaincodeCommitted(channelID, chaincodeName, sequence)
+}
+
+// Invoke prepares and executes transaction using request and optional request options.
+func (client *Client) Invoke(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.invoke(request, opts...)
+}
+
+// Query chaincode using request and optional request options.
+func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.query(request, opts...)
+}
+
+// QueryBlock queries the ledger for Block by block number.
+func (client *Client) QueryBlock(blockNumber uint64, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.queryBlock(blockNumber)
+}
+
+// QueryBlockByTxID queries for block which contains a transaction.
+func (client *Client) QueryBlockByTxID(txID string, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.queryBlockByTxID(txID)
+}
+
+// RegisterChaincodeEvent registers for chaincode events. Unregister must be called when the registration is no longer needed.
+func (client *Client) RegisterChaincodeEvent(chaincodeID, eventFilter string, opts ...Option) (<-chan *ChaincodeEvent, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.registerChaincodeEvent(chaincodeID, eventFilter)
+}
+
+// UnregisterChaincodeEvent removes the given registration and closes the event channel.
+func (client *Client) UnregisterChaincodeEvent(eventFilter string, opts ...Option) error {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return err
+	}
+	handler.unregisterChaincodeEvent(eventFilter)
+	return nil
+}
+
+func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, error) {
+	client.mutex.RLock()
+	defer client.mutex.RUnlock()
+
+	options := &options{
+		channelID:    "",
+		userIdentity: "",
+	}
+
+	for _, opt := range opts {
+		opt.apply(options)
+	}
+
+	if len(options.channelID) == 0 && len(client.channelsHandlers) > 1 {
+		return nil, errors.New("cannot determine channel context, multiple channels bound to client")
+	}
+
+	if len(options.channelID) == 0 {
+		if len(options.userIdentity) == 0 {
+			return client.channelsHandlers[0].handlers[0].handler, nil
+		}
+
+		handler := client.channelsHandlers[0].handlers.find(options.userIdentity)
+		if handler == nil {
+			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
+		}
+
+		return handler, nil
+	}
+
+	chanHandlers := client.channelsHandlers.find(options.channelID)
+	if chanHandlers == nil {
+		return nil, fmt.Errorf("binding for channel '%s' not found", options.channelID)
+	}
+
+	if len(options.userIdentity) > 0 {
+		handler := chanHandlers.find(options.userIdentity)
+		if handler == nil {
+			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
+		}
+
+		return handler, nil
+	}
+
+	return chanHandlers[0].handler, nil
 }

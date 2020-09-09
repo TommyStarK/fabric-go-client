@@ -35,6 +35,41 @@ func TestMembershipServiceProvider(t *testing.T) {
 func TestCreateUpdateJoinChannelForOrg1AndOrg2(t *testing.T) {
 	org1CreateUpdateAndJoinChannel(t, org1client)
 	org2UpdateAndJoinChannel(t, org2client)
+
+	handler, err := org1client.selectChannelHandler()
+	if err != nil || handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"))
+	if err != nil || handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithUserContext("User1"))
+	if err != nil || handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("User1"))
+	if err != nil || handler == nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelContext("dummy"))
+	if err == nil || handler != nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithUserContext("foo"))
+	if err == nil || handler != nil {
+		t.Fail()
+	}
+
+	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("foo"))
+	if err == nil || handler != nil {
+		t.Fail()
+	}
 }
 
 func TestChannelManagementFailureCases(t *testing.T) {
@@ -46,12 +81,24 @@ func TestInstallAndApproveChaincodeOnOrg1AndOrg2(t *testing.T) {
 	org2InstallAndApproveChaincodeContractAPI(t, org2client)
 }
 
-func TestCommitChaincodeForOrg1(t *testing.T) {
+func TestCommitChaincodeOnOrg1(t *testing.T) {
 	org1CommitChaincode(t, org1client)
 }
 
 func TestChaincodeManagementFailureCases(t *testing.T) {
 	chaincodeManagementFailureCases(t, org1client)
+}
+
+func TestChaincodeOperations(t *testing.T) {
+	initChaincode(t, org1client)
+	writeToLedger(t, org1client)
+	readFromLedger(t, org2client)
+	queryBlock(t, org1client)
+	queryBlockByTxID(t, org2client)
+	registerChaincodeEvent(t, org1client)
+	chaincodeEventTimeout(t, org1client)
+	chaincodeOpsFailureCases(t, org1client)
+	testConvertChaincodeRequest(t)
 }
 
 func TestCloseClient(t *testing.T) {
