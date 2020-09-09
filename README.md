@@ -18,6 +18,10 @@ If you wish to use the legacy chaincode lifecyle and run the client against Hype
 
 :warning: For the moment, the client is only able to manage Go chaincodes, meaning you cannot install neither Node.js nor Java chaincodes with it.
 
+## Contribution
+
+Each Contribution is welcomed and encouraged. I do not claim to cover each use cases neither completely master the Go nor Hyperledger Fabric. If you encounter a non sense or any trouble, you can open an issue and I will be happy to discuss about it :smile:
+
 ## Usage
 
 ```bash
