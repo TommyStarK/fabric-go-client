@@ -229,6 +229,15 @@ func (client *Client) QueryBlock(blockNumber uint64, opts ...Option) (*Block, er
 	return handler.queryBlock(blockNumber)
 }
 
+// QueryBlockByHash queries the ledger for block by block hash.
+func (client *Client) QueryBlockByHash(blockHash []byte, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return handler.queryBlockByHash(blockHash)
+}
+
 // QueryBlockByTxID queries for block which contains a transaction.
 func (client *Client) QueryBlockByTxID(txID string, opts ...Option) (*Block, error) {
 	handler, err := client.selectChannelHandler(opts...)
@@ -236,6 +245,16 @@ func (client *Client) QueryBlockByTxID(txID string, opts ...Option) (*Block, err
 		return nil, err
 	}
 	return handler.queryBlockByTxID(txID)
+}
+
+// QueryInfo queries for various useful blockchain information on this channel such as block height and current block hash.
+func (client *Client) QueryInfo(opts ...Option) (*BlockchainInfo, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return handler.queryInfo()
 }
 
 // RegisterChaincodeEvent registers for chaincode events. Unregister must be called when the registration is no longer needed.

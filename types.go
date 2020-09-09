@@ -24,6 +24,13 @@ type Block struct {
 	Metadata *BlockMetadata
 }
 
+// BlockchainInfo contains information about the blockchain ledger such as height, current block hash, and previous block hash.
+type BlockchainInfo struct {
+	Height            uint64
+	CurrentBlockHash  []byte
+	PreviousBlockHash []byte
+}
+
 // Chaincode describes info of a chaincode.
 type Chaincode struct {
 	InitArgs []string `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`

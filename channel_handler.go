@@ -17,6 +17,8 @@ type channelHandler interface {
 	query(request *ChaincodeRequest, opts ...Option) (*TransactionResponse, error)
 	queryBlock(blockNumber uint64) (*Block, error)
 	queryBlockByTxID(txID string) (*Block, error)
+	queryBlockByHash(blockHash []byte) (*Block, error)
+	queryInfo() (*BlockchainInfo, error)
 	registerChaincodeEvent(chaincodeID, eventFilter string) (<-chan *ChaincodeEvent, error)
 	unregisterChaincodeEvent(eventFilter string)
 }
@@ -79,10 +81,19 @@ func (chn *channelHandlerClient) queryBlock(blockNumber uint64) (*Block, error) 
 	block, err := chn.underlyingLedger.QueryBlock(blockNumber)
 	return convertBlock(block), err
 }
+func (chn *channelHandlerClient) queryBlockByHash(blockHash []byte) (*Block, error) {
+	block, err := chn.underlyingLedger.QueryBlockByHash(blockHash)
+	return convertBlock(block), err
+}
 
 func (chn *channelHandlerClient) queryBlockByTxID(txID string) (*Block, error) {
 	block, err := chn.underlyingLedger.QueryBlockByTxID(fab.TransactionID(txID))
 	return convertBlock(block), err
+}
+
+func (chn *channelHandlerClient) queryInfo() (*BlockchainInfo, error) {
+	blockchainInfo, err := chn.underlyingLedger.QueryInfo()
+	return convertBlockchainInfo(blockchainInfo), err
 }
 
 func (chn *channelHandlerClient) registerChaincodeEvent(chaincodeID, eventFilter string) (<-chan *ChaincodeEvent, error) {
@@ -165,6 +176,18 @@ func convertBlock(b *common.Block) *Block {
 	}
 
 	return block
+}
+
+func convertBlockchainInfo(info *fab.BlockchainInfoResponse) *BlockchainInfo {
+	if info == nil {
+		return nil
+	}
+
+	return &BlockchainInfo{
+		info.BCI.Height,
+		info.BCI.CurrentBlockHash,
+		info.BCI.PreviousBlockHash,
+	}
 }
 
 func convertChaincodeEvent(e *fab.CCEvent) *ChaincodeEvent {

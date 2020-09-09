@@ -6,7 +6,10 @@ import (
 	"time"
 )
 
-var txID string
+var (
+	txID      string
+	blockHash []byte
+)
 
 func writeToLedger(t *testing.T, client *Client) {
 	req := &ChaincodeRequest{
@@ -61,6 +64,25 @@ func queryBlock(t *testing.T, client *Client) {
 
 func queryBlockByTxID(t *testing.T, client *Client) {
 	if _, err := client.QueryBlockByTxID(txID); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func queryInfo(t *testing.T, client *Client) {
+	info, err := client.QueryInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info.Height != 5 {
+		t.Fail()
+	}
+
+	blockHash = info.PreviousBlockHash
+}
+
+func queryBlockByHash(t *testing.T, client *Client) {
+	if _, err := client.QueryBlockByHash(blockHash); err != nil {
 		t.Fatal(err)
 	}
 }
