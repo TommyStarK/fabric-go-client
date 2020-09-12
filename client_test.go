@@ -95,8 +95,11 @@ func TestChaincodeOperations(t *testing.T) {
 	readFromLedger(t, org2client)
 	queryBlock(t, org1client)
 	queryBlockByTxID(t, org2client)
+	queryInfo(t, org1client)
+	queryBlockByHash(t, org2client)
 	registerChaincodeEvent(t, org1client)
 	chaincodeEventTimeout(t, org1client)
+	chaincodePrivateDataCollection(t, org1client, org2client)
 	chaincodeOpsFailureCases(t, org1client)
 	testConvertChaincodeRequest(t)
 }

@@ -24,21 +24,39 @@ type Block struct {
 	Metadata *BlockMetadata
 }
 
+// BlockchainInfo contains information about the blockchain ledger such as height, current block hash, and previous block hash.
+type BlockchainInfo struct {
+	Height            uint64
+	CurrentBlockHash  []byte
+	PreviousBlockHash []byte
+}
+
 // Chaincode describes info of a chaincode.
 type Chaincode struct {
-	InitArgs             []string `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`
-	InitRequired         bool     `json:"initRequired" yaml:"initRequired"`
-	MustBeApprovedByOrgs []string `json:"mustBeApprovedByOrgs" yaml:"mustBeApprovedByOrgs"`
-	Name                 string   `json:"name" yaml:"name"`
-	Path                 string   `json:"path" yaml:"path"`
-	Role                 string   `json:"role" yaml:"role"`
-	Version              string   `json:"version" yaml:"version"`
+	Collections          []ChaincodeCollection `json:"collections,omitempty" yaml:"collections,omitempty"`
+	InitRequired         bool                  `json:"initRequired" yaml:"initRequired"`
+	MustBeApprovedByOrgs []string              `json:"mustBeApprovedByOrgs" yaml:"mustBeApprovedByOrgs"`
+	Name                 string                `json:"name" yaml:"name"`
+	Path                 string                `json:"path" yaml:"path"`
+	Role                 string                `json:"role" yaml:"role"`
+	Sequence             int64                 `json:"sequence" yaml:"sequence"`
+	Version              string                `json:"version" yaml:"version"`
 }
 
 // ChaincodeCall contains the ID of the chaincode as well as an optional set of private data collections that may be accessed by the chaincode.
 type ChaincodeCall struct {
 	ID          string
 	Collections []string
+}
+
+// ChaincodeCollection defines the configuration of a collection.
+type ChaincodeCollection struct {
+	BlockToLive       uint64 `json:"blockToLive" yaml:"blockToLive"`
+	MaxPeerCount      int32  `json:"maxPeerCount" yaml:"maxPeerCount"`
+	MemberOnlyRead    bool   `json:"memberOnlyRead" yaml:"memberOnlyRead"`
+	Name              string `json:"name" yaml:"name"`
+	Policy            string `json:"policy" yaml:"policy"`
+	RequiredPeerCount int32  `json:"requiredPeerCount" yaml:"requiredPeerCount"`
 }
 
 // ChaincodeEvent contains the data for a chaincode event.

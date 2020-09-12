@@ -1,6 +1,7 @@
 package fabclient
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	mspprovider "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	contextImpl "github.com/hyperledger/fabric-sdk-go/pkg/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/ccpackager/lifecycle"
+	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl"
 )
 
@@ -22,9 +24,9 @@ type resourceManager interface {
 	saveChannel(channelID, channelConfigPath string) error
 	joinChannel(channelID string) error
 	lifecycleInstallChaincode(chaincode Chaincode) (string, error)
-	lifecycleApproveChaincode(channelID, packageID string, sequence int64, chaincode Chaincode) error
-	lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error)
-	lifecycleCommitChaincode(channelID string, sequence int64, chaincode Chaincode) error
+	lifecycleApproveChaincode(channelID, packageID string, chaincode Chaincode) error
+	lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error)
+	lifecycleCommitChaincode(channelID string, chaincode Chaincode) error
 	isChaincodeInstalled(packageID string) bool
 	isChaincodeApproved(channelID, chaincodeName string, sequence int64) bool
 	isChaincodeCommitted(channelID, chaincodeName string, sequence int64) bool
@@ -61,6 +63,7 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 		break
 	}
 
+	// for tests purpose
 	if len(os.Getenv("TARGET_ORDERER")) > 0 {
 		randomOrderer = os.Getenv("TARGET_ORDERER")
 	}
@@ -136,23 +139,36 @@ func (rsm *resourceManagementClient) lifecycleInstallChaincode(chaincode Chainco
 
 	for _, r := range res {
 		if r.Status != 200 || r.PackageID != packageID {
-			return "", fmt.Errorf("unexpected error occurred, failed to install chaincode '%s'", chaincode.Name)
+			if err == nil {
+				err = errors.New("unexpected error(s) occurred: ")
+			}
+
+			err = fmt.Errorf("%w\n[%s] failed to install chaincode '%s'", err, r.Target, chaincode.Name)
 		}
 	}
 
-	return packageID, nil
+	return packageID, err
 }
 
-func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packageID string, sequence int64, chaincode Chaincode) error {
+func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packageID string, chaincode Chaincode) error {
 	request := resmgmt.LifecycleApproveCCRequest{
 		Name:              chaincode.Name,
 		Version:           chaincode.Version,
 		PackageID:         packageID,
-		Sequence:          sequence,
+		Sequence:          chaincode.Sequence,
 		EndorsementPlugin: "escc",
 		ValidationPlugin:  "vscc",
 		SignaturePolicy:   generateChaincodePolicy(chaincode),
 		InitRequired:      chaincode.InitRequired,
+	}
+
+	if len(chaincode.Collections) > 0 {
+		collectionsConfig, err := processChaincodeCollections(chaincode.Collections)
+		if err != nil {
+			return fmt.Errorf("failed to approve chaincode '%s': %w", chaincode.Name, err)
+		}
+
+		request.CollectionConfig = collectionsConfig
 	}
 
 	txID, err := rsm.client.LifecycleApproveCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt, rsm.withTargetPeersOpt)
@@ -167,7 +183,7 @@ func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packag
 	return nil
 }
 
-func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error) {
+func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error) {
 	request := resmgmt.LifecycleCheckCCCommitReadinessRequest{
 		Name:              chaincode.Name,
 		Version:           chaincode.Version,
@@ -175,8 +191,17 @@ func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(chan
 		EndorsementPlugin: "escc",
 		ValidationPlugin:  "vscc",
 		SignaturePolicy:   generateChaincodePolicy(chaincode),
-		Sequence:          sequence,
+		Sequence:          chaincode.Sequence,
 		InitRequired:      chaincode.InitRequired,
+	}
+
+	if len(chaincode.Collections) > 0 {
+		collectionsConfig, err := processChaincodeCollections(chaincode.Collections)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check the commit readiness for chaincode '%s': %w", chaincode.Name, err)
+		}
+
+		request.CollectionConfig = collectionsConfig
 	}
 
 	response, err := rsm.client.LifecycleCheckCCCommitReadiness(channelID, request, rsm.withRetryOpt, rsm.withTargetPeersOpt)
@@ -187,15 +212,24 @@ func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(chan
 	return response.Approvals, nil
 }
 
-func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, sequence int64, chaincode Chaincode) error {
+func (rsm *resourceManagementClient) lifecycleCommitChaincode(channelID string, chaincode Chaincode) error {
 	request := resmgmt.LifecycleCommitCCRequest{
 		Name:              chaincode.Name,
 		Version:           chaincode.Version,
-		Sequence:          sequence,
+		Sequence:          chaincode.Sequence,
 		EndorsementPlugin: "escc",
 		ValidationPlugin:  "vscc",
 		SignaturePolicy:   generateChaincodePolicy(chaincode),
 		InitRequired:      chaincode.InitRequired,
+	}
+
+	if len(chaincode.Collections) > 0 {
+		collectionsConfig, err := processChaincodeCollections(chaincode.Collections)
+		if err != nil {
+			return fmt.Errorf("failed to commit chaincode '%s': %w", chaincode.Name, err)
+		}
+
+		request.CollectionConfig = collectionsConfig
 	}
 
 	txID, err := rsm.client.LifecycleCommitCC(channelID, request, rsm.withOrdererEndpointOpt, rsm.withRetryOpt)
@@ -372,4 +406,43 @@ func generateChaincodePolicy(chaincode Chaincode) *common.SignaturePolicyEnvelop
 		convertMSPRole(chaincode.Role),
 		chaincode.MustBeApprovedByOrgs,
 	)
+}
+
+func parsePolicy(policy string) (*common.SignaturePolicyEnvelope, error) {
+	signaturePolicyEnvelope, err := cauthdsl.FromString(policy)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse policy: %w", err)
+	}
+
+	return signaturePolicyEnvelope, nil
+}
+
+func processChaincodeCollections(collections []ChaincodeCollection) ([]*protopeer.CollectionConfig, error) {
+	collectionsConfig := make([]*protopeer.CollectionConfig, 0, len(collections))
+
+	for _, collection := range collections {
+		policy, err := parsePolicy(collection.Policy)
+		if err != nil {
+			return nil, fmt.Errorf("failed to process configuration for collection '%s': %w", collection.Name, err)
+		}
+
+		collectionsConfig = append(collectionsConfig, &protopeer.CollectionConfig{
+			Payload: &protopeer.CollectionConfig_StaticCollectionConfig{
+				StaticCollectionConfig: &protopeer.StaticCollectionConfig{
+					Name: collection.Name,
+					MemberOrgsPolicy: &protopeer.CollectionPolicyConfig{
+						Payload: &protopeer.CollectionPolicyConfig_SignaturePolicy{
+							SignaturePolicy: policy,
+						},
+					},
+					RequiredPeerCount: collection.RequiredPeerCount,
+					MaximumPeerCount:  collection.RequiredPeerCount,
+					BlockToLive:       collection.BlockToLive,
+					MemberOnlyRead:    collection.MemberOnlyRead,
+				},
+			},
+		})
+	}
+
+	return collectionsConfig, nil
 }

@@ -24,9 +24,6 @@
   ],
   "chaincodes": {
     "name": "fcacc",
-    "initArgs": [
-      "Init"
-    ],
     "initRequired": true,
     "mustBeApprovedByOrgs": [
       "Org1MSP",

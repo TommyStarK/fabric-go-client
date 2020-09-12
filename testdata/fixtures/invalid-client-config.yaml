@@ -15,8 +15,6 @@ channels:
     configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx
 chaincodes:
   name: fcacc
-  initArgs:
-      - Init
   initRequired: true
   mustBeApprovedByOrgs:
     - Org1MSP

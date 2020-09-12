@@ -101,7 +101,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	return client, nil
 }
 
-func (client *Client) bindChannel(channelID string) error {
+func (client *Client) createChannelHandler(channelID string) error {
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
@@ -113,14 +113,14 @@ func (client *Client) bindChannel(channelID string) error {
 	for _, user := range client.config.Identities.Users {
 		userIdentity, err := client.msp.createSigningIdentity(user.Certificate, user.PrivateKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create handler for channel '%s': %w", channelID, err)
 		}
 
 		userContext := client.fabricSDK.ChannelContext(channelID, fabsdk.WithIdentity(userIdentity))
 
 		chHandler, err := newChannelHandler(userContext)
 		if err != nil {
-			return fmt.Errorf("failed to bind channel '%s' to client: %w", channelID, err)
+			return fmt.Errorf("failed to create handler for channel '%s': %w", channelID, err)
 		}
 
 		handlers = append(handlers, handler{
@@ -179,7 +179,7 @@ func (client *Client) JoinChannel(channelID string) error {
 		return err
 	}
 
-	return client.bindChannel(channelID)
+	return client.createChannelHandler(channelID)
 }
 
 // LifecycleInstallChaincode installs a chaincode package using Fabric 2.0 chaincode lifecycle. Returns the chaincode package ID if the install succeeded.
@@ -188,18 +188,18 @@ func (client *Client) LifecycleInstallChaincode(chaincode Chaincode) (string, er
 }
 
 // LifecycleApproveChaincode approves a chaincode for an organization.
-func (client *Client) LifecycleApproveChaincode(channelID, packageID string, sequence int64, chaincode Chaincode) error {
-	return client.resourceManager.lifecycleApproveChaincode(channelID, packageID, sequence, chaincode)
+func (client *Client) LifecycleApproveChaincode(channelID, packageID string, chaincode Chaincode) error {
+	return client.resourceManager.lifecycleApproveChaincode(channelID, packageID, chaincode)
 }
 
 // LifecyleCheckChaincodeCommitReadiness checks the 'commit readiness' of a chaincode. Returns a map holding the org approvals.
-func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID, packageID string, sequence int64, chaincode Chaincode) (map[string]bool, error) {
-	return client.resourceManager.lifecycleCheckChaincodeCommitReadiness(channelID, packageID, sequence, chaincode)
+func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error) {
+	return client.resourceManager.lifecycleCheckChaincodeCommitReadiness(channelID, packageID, chaincode)
 }
 
 // LifecycleCommitChaincode commits the chaincode to the given channel.
-func (client *Client) LifecycleCommitChaincode(channelID string, sequence int64, chaincode Chaincode) error {
-	return client.resourceManager.lifecycleCommitChaincode(channelID, sequence, chaincode)
+func (client *Client) LifecycleCommitChaincode(channelID string, chaincode Chaincode) error {
+	return client.resourceManager.lifecycleCommitChaincode(channelID, chaincode)
 }
 
 // IsChaincodeInstalled returns whether the given chaincode has been installed or not.
@@ -223,7 +223,13 @@ func (client *Client) Invoke(request *ChaincodeRequest, opts ...Option) (*Transa
 	if err != nil {
 		return nil, err
 	}
-	return handler.invoke(request, opts...)
+
+	response, err := handler.invoke(request, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to invoke chaincode '%s': %w", request.ChaincodeID, err)
+	}
+
+	return response, nil
 }
 
 // Query chaincode using request and optional request options.
@@ -232,7 +238,13 @@ func (client *Client) Query(request *ChaincodeRequest, opts ...Option) (*Transac
 	if err != nil {
 		return nil, err
 	}
-	return handler.query(request, opts...)
+
+	response, err := handler.query(request, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query chaincode '%s': %w", request.ChaincodeID, err)
+	}
+
+	return response, nil
 }
 
 // QueryBlock queries the ledger for Block by block number.
@@ -241,7 +253,28 @@ func (client *Client) QueryBlock(blockNumber uint64, opts ...Option) (*Block, er
 	if err != nil {
 		return nil, err
 	}
-	return handler.queryBlock(blockNumber)
+
+	block, err := handler.queryBlock(blockNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query the ledger to retrieve the block number '%d': %w", blockNumber, err)
+	}
+
+	return block, nil
+}
+
+// QueryBlockByHash queries the ledger for block by block hash.
+func (client *Client) QueryBlockByHash(blockHash []byte, opts ...Option) (*Block, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := handler.queryBlockByHash(blockHash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query the ledger to retrieve a block by block hash (%v): %w", blockHash, err)
+	}
+
+	return block, nil
 }
 
 // QueryBlockByTxID queries for block which contains a transaction.
@@ -250,7 +283,28 @@ func (client *Client) QueryBlockByTxID(txID string, opts ...Option) (*Block, err
 	if err != nil {
 		return nil, err
 	}
-	return handler.queryBlockByTxID(txID)
+
+	block, err := handler.queryBlockByTxID(txID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query the ledger to retrieve the block which contains the transaction ID '%s': %w", txID, err)
+	}
+
+	return block, nil
+}
+
+// QueryInfo queries for various useful blockchain information on this channel such as block height and current block hash.
+func (client *Client) QueryInfo(opts ...Option) (*BlockchainInfo, error) {
+	handler, err := client.selectChannelHandler(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	blockchainInfo, err := handler.queryInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query blockchain information: %w", err)
+	}
+
+	return blockchainInfo, nil
 }
 
 // RegisterChaincodeEvent registers for chaincode events. Unregister must be called when the registration is no longer needed.
@@ -286,7 +340,7 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 	}
 
 	if len(options.channelID) == 0 && len(client.channelsHandlers) > 1 {
-		return nil, errors.New("cannot determine channel context, multiple channels bound to client")
+		return nil, errors.New("cannot determine channel context")
 	}
 
 	if len(options.channelID) == 0 {
@@ -296,7 +350,7 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 
 		handler := client.channelsHandlers[0].handlers.find(options.userIdentity)
 		if handler == nil {
-			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
+			return nil, fmt.Errorf("no channel handler found for user context '%s'", options.userIdentity)
 		}
 
 		return handler, nil
@@ -304,13 +358,13 @@ func (client *Client) selectChannelHandler(opts ...Option) (channelHandler, erro
 
 	chanHandlers := client.channelsHandlers.find(options.channelID)
 	if chanHandlers == nil {
-		return nil, fmt.Errorf("binding for channel '%s' not found", options.channelID)
+		return nil, fmt.Errorf("handler for channel '%s' not found", options.channelID)
 	}
 
 	if len(options.userIdentity) > 0 {
 		handler := chanHandlers.find(options.userIdentity)
 		if handler == nil {
-			return nil, fmt.Errorf("no channel binding found for user context (%s)", options.userIdentity)
+			return nil, fmt.Errorf("no channel handler found for user context '%s'", options.userIdentity)
 		}
 
 		return handler, nil

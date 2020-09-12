@@ -6,6 +6,8 @@
 [![GoDoc](https://godoc.org/github.com/TommyStarK/fabric-go-client?status.svg)](https://pkg.go.dev/github.com/TommyStarK/fabric-go-client@v1.0.0-hlf-2.2?tab=doc)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
+:warning: work in progress :warning:
+
 The aim of this client is to facilitate the development of solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.2/) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
 
 It is a wrapper around the fabric-sdk-go. The client has been designed for being able to manage multiple channels and interact with multiple chaincodes.

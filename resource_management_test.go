@@ -71,7 +71,7 @@ func org1InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be installed on all peers belonging to org MSP", chaincode.Name)
 	}
 
-	if err := client.LifecycleApproveChaincode(channel.Name, chaincodeInitialVersionPackageID, 1, chaincode); err != nil {
+	if err := client.LifecycleApproveChaincode(channel.Name, chaincodeInitialVersionPackageID, chaincode); err != nil {
 		t.Fatal(err)
 	}
 
@@ -79,7 +79,7 @@ func org1InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be approved on channel '%s'", chaincode.Name, channel.Name)
 	}
 
-	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, 1, chaincode)
+	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, chaincode)
 	if err != nil {
 		t.Errorf("chaincode '%s' should be ready to be committed on channel '%s'", chaincode.Name, channel.Name)
 	}
@@ -103,7 +103,7 @@ func org2InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be installed on all peers belonging to org MSP", chaincode.Name)
 	}
 
-	if err := client.LifecycleApproveChaincode(channel.Name, chaincodeInitialVersionPackageID, 1, chaincode); err != nil {
+	if err := client.LifecycleApproveChaincode(channel.Name, chaincodeInitialVersionPackageID, chaincode); err != nil {
 		t.Fatal(err)
 	}
 
@@ -111,7 +111,7 @@ func org2InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be approved on channel '%s'", chaincode.Name, channel.Name)
 	}
 
-	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, 1, chaincode)
+	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, chaincode)
 	if err != nil {
 		t.Errorf("chaincode '%s' should be ready to be committed on channel '%s'", chaincode.Name, channel.Name)
 	}
@@ -126,7 +126,7 @@ func org1CommitChaincode(t *testing.T, client *Client) {
 	chaincode := client.Config().Chaincodes[0]
 	channel := client.Config().Channels[0]
 
-	if err := client.LifecycleCommitChaincode(channel.Name, 1, chaincode); err != nil {
+	if err := client.LifecycleCommitChaincode(channel.Name, chaincode); err != nil {
 		t.Fatal(err)
 	}
 
@@ -153,7 +153,7 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should not be approved on channel %s", chaincode.Name, channel.Name)
 	}
 
-	if err := client.LifecycleCommitChaincode(channel.Name, 1, chaincode); err == nil {
+	if err := client.LifecycleCommitChaincode(channel.Name, chaincode); err == nil {
 		t.Error("should have returned an error, chaincode neither installed nor approved")
 	}
 

@@ -25,9 +25,6 @@
   "chaincodes": [
     {
       "name": "fcacc",
-      "initArgs": [
-        "Init"
-      ],
       "initRequired": true,
       "mustBeApprovedByOrgs": [
         "Org1MSP",
@@ -35,6 +32,7 @@
       ],
       "path": "/go/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc",
       "role": "member",
+      "sequence": 1,
       "version": "1.0"
     }
   ]

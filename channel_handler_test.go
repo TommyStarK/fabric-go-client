@@ -6,7 +6,10 @@ import (
 	"time"
 )
 
-var txID string
+var (
+	txID      string
+	blockHash []byte
+)
 
 func initChaincode(t *testing.T, client *Client) {
 	req := &ChaincodeRequest{
@@ -73,6 +76,25 @@ func queryBlock(t *testing.T, client *Client) {
 
 func queryBlockByTxID(t *testing.T, client *Client) {
 	if _, err := client.QueryBlockByTxID(txID); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func queryInfo(t *testing.T, client *Client) {
+	info, err := client.QueryInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if info.Height != 8 {
+		t.Fail()
+	}
+
+	blockHash = info.PreviousBlockHash
+}
+
+func queryBlockByHash(t *testing.T, client *Client) {
+	if _, err := client.QueryBlockByHash(blockHash); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -161,20 +183,61 @@ func chaincodeEventTimeout(t *testing.T, client *Client) {
 	client.UnregisterChaincodeEvent("foo")
 }
 
+func chaincodePrivateDataCollection(t *testing.T, client1, client2 *Client) {
+	req := &ChaincodeRequest{
+		ChaincodeID: client1.Config().Chaincodes[0].Name,
+		Function:    "StorePrivateData",
+		TransientMap: map[string][]byte{
+			"test": []byte("this is a test"),
+		},
+	}
+
+	if _, err := client1.Invoke(req, WithOrdererResponseTimeout(2*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+
+	req = &ChaincodeRequest{
+		ChaincodeID: client2.Config().Chaincodes[0].Name,
+		Function:    "QueryPrivateData",
+		Args:        []string{"test"},
+	}
+
+	res, err := client2.Query(req, WithOrdererResponseTimeout(2*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Status != 200 {
+		t.Fail()
+	}
+
+	if len(res.TransactionID) == 0 {
+		t.Fail()
+	}
+
+	if string(res.Payload) != "this is a test" {
+		t.Fail()
+	}
+}
+
 func chaincodeOpsFailureCases(t *testing.T, client *Client) {
-	if _, err := client.Invoke(nil); err == nil {
+	req := &ChaincodeRequest{
+		ChaincodeID: client.Config().Chaincodes[0].Name,
+	}
+
+	if _, err := client.Invoke(req); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Invoke(nil, WithChannelContext("dummy")); err == nil {
+	if _, err := client.Invoke(req, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Query(nil); err == nil {
+	if _, err := client.Query(req); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Query(nil, WithChannelContext("dummy")); err == nil {
+	if _, err := client.Query(req, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
@@ -183,6 +246,22 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 	}
 
 	if _, err := client.QueryBlockByTxID("dummy", WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlock(0, WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByHash(nil); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByHash(nil, WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryInfo(WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 

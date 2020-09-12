@@ -15,13 +15,18 @@ channels:
     configPath: ./testdata/hyperledger-fabric-network/channel-artifacts/channelall.tx
 chaincodes:
   - name: fcacc
-    initArgs:
-        - Init
     initRequired: true
     mustBeApprovedByOrgs:
       - Org1MSP
       - Org2MSP
     path: /go/src/github.com/TommyStarK/fabric-go-client/testdata/hyperledger-fabric-chaincode/fcacc
     role: member
+    sequence: 1
     version: 1.0
-
+    collections:
+      - name: dummy
+        memberOnlyRead: false
+        policy: OR('Org1MSP.peer', 'Org2MSP.peer')
+        blockToLive: 0
+        requiredPeerCount: 0
+        maxPeerCount: 0
