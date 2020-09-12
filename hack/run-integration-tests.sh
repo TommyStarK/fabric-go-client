@@ -28,7 +28,7 @@ fi
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME down;
 docker ps -a | grep "dev-peer0.org1.dummy.com-sacc-\(1.0\|2.0\)" | awk '{print $1}'| $XARGS docker rm -f;
 docker images | grep "dev-peer0.org1.dummy.com-sacc-\(1.0\|2.0\)" | awk '{print $3}'| $XARGS docker rmi -f;
-docker rmi -f fabclient;
+docker rmi -f fabclient:latest;
 docker volume prune -f;
 docker network prune -f;
 
