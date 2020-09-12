@@ -236,6 +236,10 @@ github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar
 github.com/hyperledger/fabric-sdk-go/pkg/util/test
 github.com/hyperledger/fabric-sdk-go/test/metadata
 github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/policydsl
+# github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric v0.0.0-20190822125948-d2b42602e52e
+## explicit
+github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl
+github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/internal/protoutil
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 github.com/kr/logfmt
 # github.com/magiconair/properties v1.8.1
