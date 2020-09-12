@@ -1,6 +1,7 @@
 package fabclient
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -58,6 +59,7 @@ func newResourceManager(ctx context.ClientProvider, identity mspprovider.Signing
 		break
 	}
 
+	// for tests purpose
 	if len(os.Getenv("TARGET_ORDERER")) > 0 {
 		randomOrderer = os.Getenv("TARGET_ORDERER")
 	}
@@ -105,7 +107,7 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 	// let SDK determines GOPATH
 	ccPackage, err := gopackager.NewCCPackage(chaincode.Path, "")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to install chaincode '%s': %w", chaincode.Name, err)
 	}
 
 	request := resmgmt.InstallCCRequest{
@@ -117,16 +119,20 @@ func (rsm *resourceManagementClient) installChaincode(chaincode Chaincode) error
 
 	res, err := rsm.client.InstallCC(request, rsm.withRetryOpt, rsm.withTargetPeersOpt)
 	if err != nil {
-		return fmt.Errorf("failed to install chaincode '%s' (version: %s): %w", chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("failed to install chaincode '%s': %w", chaincode.Name, err)
 	}
 
 	for _, r := range res {
 		if r.Status != 200 {
-			return fmt.Errorf("peer (%s), unexpected error occurred, failed to install chaincode '%s', %s", r.Target, chaincode.Name, r.Info)
+			if err == nil {
+				err = errors.New("unexpected error(s) occurred: ")
+			}
+
+			err = fmt.Errorf("%w\n[%s] failed to install chaincode '%s': %s", err, r.Target, chaincode.Name, r.Info)
 		}
 	}
 
-	return nil
+	return err
 }
 
 func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID string, chaincode Chaincode) error {
@@ -145,7 +151,7 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 		go func() {
 			response, err := rsm.client.QueryInstantiatedChaincodes(channelID, resmgmt.WithTargets(peer))
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to query instantiated chaincodes: %w", peer.URL(), err)
+				done <- fmt.Errorf("[%s] failed to query instantiated chaincodes: %w", peer.URL(), err)
 				return
 			}
 
@@ -165,13 +171,13 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 
 			currentVersion, err := strconv.ParseFloat(ChaincodeCurrentVersion, 64)
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to parse chaincode '%s' current version: %w", peer.URL(), chaincode.Name, err)
+				done <- fmt.Errorf("[%s] failed to parse chaincode '%s' current version: %w", peer.URL(), chaincode.Name, err)
 				return
 			}
 
 			newVersion, err := strconv.ParseFloat(chaincode.Version, 64)
 			if err != nil {
-				done <- fmt.Errorf("peer (%s), failed to parse chaincode '%s' new version: %w", peer.URL(), chaincode.Name, err)
+				done <- fmt.Errorf("[%s] failed to parse chaincode '%s' new version: %w", peer.URL(), chaincode.Name, err)
 				return
 			}
 
@@ -210,9 +216,9 @@ func (rsm *resourceManagementClient) instantiateOrUpgradeChaincode(channelID str
 }
 
 func (rsm *resourceManagementClient) instantiateChaincode(channelID string, chaincode Chaincode, peer fab.Peer) error {
-	policy, err := parseChaincodePolicy(chaincode.Policy)
+	policy, err := parsePolicy(chaincode.Policy)
 	if err != nil {
-		return err
+		return fmt.Errorf("[%s] failed to instantiate chaincode '%s': %w", peer.URL(), chaincode.Name, err)
 	}
 
 	request := resmgmt.InstantiateCCRequest{
@@ -227,22 +233,31 @@ func (rsm *resourceManagementClient) instantiateChaincode(channelID string, chai
 		request.Args = convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs)
 	}
 
+	if len(chaincode.Collections) > 0 {
+		collectionsConfig, err := processChaincodeCollections(chaincode.Collections)
+		if err != nil {
+			return fmt.Errorf("[%s] failed to instantiate chaincode '%s': %w", peer.URL(), chaincode.Name, err)
+		}
+
+		request.CollConfig = collectionsConfig
+	}
+
 	response, err := rsm.client.InstantiateCC(channelID, request, resmgmt.WithTargets(peer))
 	if err != nil {
-		return fmt.Errorf("peer (%s), failed to instantiate chaincode '%s' (version %s): %w", peer.URL(), chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("[%s] failed to instantiate chaincode '%s': %w", peer.URL(), chaincode.Name, err)
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to instantiate chaincode '%s' (version %s)", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("[%s] unexpected error occurred, failed to instantiate chaincode '%s'", peer.URL(), chaincode.Name)
 	}
 
 	return nil
 }
 
 func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincode Chaincode, peer fab.Peer) error {
-	policy, err := parseChaincodePolicy(chaincode.Policy)
+	policy, err := parsePolicy(chaincode.Policy)
 	if err != nil {
-		return err
+		return fmt.Errorf("[%s] failed to upgrade chaincode '%s': %w", peer.URL(), chaincode.Name, err)
 	}
 
 	request := resmgmt.UpgradeCCRequest{
@@ -257,13 +272,22 @@ func (rsm *resourceManagementClient) upgradeChaincode(channelID string, chaincod
 		request.Args = convertArrayOfStringsToArrayOfByteArrays(chaincode.InitArgs)
 	}
 
+	if len(chaincode.Collections) > 0 {
+		collectionsConfig, err := processChaincodeCollections(chaincode.Collections)
+		if err != nil {
+			return fmt.Errorf("[%s] failed to upgrade chaincode '%s': %w", peer.URL(), chaincode.Name, err)
+		}
+
+		request.CollConfig = collectionsConfig
+	}
+
 	response, err := rsm.client.UpgradeCC(channelID, request, resmgmt.WithTargets(peer))
 	if err != nil {
-		return fmt.Errorf("peer (%s), failed to upgrade chaincode '%s' to version %s: %w", peer.URL(), chaincode.Name, chaincode.Version, err)
+		return fmt.Errorf("[%s] failed to upgrade chaincode '%s': %w", peer.URL(), chaincode.Name, err)
 	}
 
 	if len(response.TransactionID) == 0 {
-		return fmt.Errorf("peer (%s), failed to upgrade chaincode '%s' to version %s", peer.URL(), chaincode.Name, chaincode.Version)
+		return fmt.Errorf("[%s] unexpected error occurred, failed to upgrade chaincode '%s'", peer.URL(), chaincode.Name)
 	}
 
 	return nil
@@ -361,18 +385,45 @@ func (rsm *resourceManagementClient) isChaincodeInstantiated(channelID, chaincod
 	}
 }
 
-func parseChaincodePolicy(chaincodePolicy string) (*common.SignaturePolicyEnvelope, error) {
-	var (
-		err    error
-		policy *common.SignaturePolicyEnvelope
-	)
+func parsePolicy(policy string) (*common.SignaturePolicyEnvelope, error) {
+	// if len(policy) == 0 {
+	// 	return nil, nil
+	// }
 
-	if len(chaincodePolicy) > 0 {
-		policy, err = cauthdsl.FromString(chaincodePolicy)
-		if err != nil {
-			return nil, err
-		}
+	signaturePolicyEnvelope, err := cauthdsl.FromString(policy)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse policy: %w", err)
 	}
 
-	return policy, nil
+	return signaturePolicyEnvelope, nil
+}
+
+func processChaincodeCollections(collections []ChaincodeCollection) ([]*pb.CollectionConfig, error) {
+	collectionsConfig := make([]*pb.CollectionConfig, 0, len(collections))
+
+	for _, collection := range collections {
+		policy, err := parsePolicy(collection.Policy)
+		if err != nil {
+			return nil, fmt.Errorf("failed to process configuration for collection '%s': %w", collection.Name, err)
+		}
+
+		collectionsConfig = append(collectionsConfig, &pb.CollectionConfig{
+			Payload: &pb.CollectionConfig_StaticCollectionConfig{
+				StaticCollectionConfig: &pb.StaticCollectionConfig{
+					Name: collection.Name,
+					MemberOrgsPolicy: &pb.CollectionPolicyConfig{
+						Payload: &pb.CollectionPolicyConfig_SignaturePolicy{
+							SignaturePolicy: policy,
+						},
+					},
+					RequiredPeerCount: collection.RequiredPeerCount,
+					MaximumPeerCount:  collection.RequiredPeerCount,
+					BlockToLive:       collection.BlockToLive,
+					MemberOnlyRead:    collection.MemberOnlyRead,
+				},
+			},
+		})
+	}
+
+	return collectionsConfig, nil
 }

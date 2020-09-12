@@ -33,17 +33,28 @@ type BlockchainInfo struct {
 
 // Chaincode describes info of a chaincode.
 type Chaincode struct {
-	InitArgs []string `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`
-	Name     string   `json:"name" yaml:"name"`
-	Path     string   `json:"path" yaml:"path"`
-	Policy   string   `json:"policy,omitempty" yaml:"policy,omitempty"`
-	Version  string   `json:"version" yaml:"version"`
+	Collections []ChaincodeCollection `json:"collections,omitempty" yaml:"collections,omitempty"`
+	InitArgs    []string              `json:"initArgs,omitempty" yaml:"initArgs,omitempty"`
+	Name        string                `json:"name" yaml:"name"`
+	Path        string                `json:"path" yaml:"path"`
+	Policy      string                `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Version     string                `json:"version" yaml:"version"`
 }
 
 // ChaincodeCall contains the ID of the chaincode as well as an optional set of private data collections that may be accessed by the chaincode.
 type ChaincodeCall struct {
 	ID          string
 	Collections []string
+}
+
+// ChaincodeCollection defines the configuration of a collection.
+type ChaincodeCollection struct {
+	BlockToLive       uint64 `json:"blockToLive" yaml:"blockToLive"`
+	MaxPeerCount      int32  `json:"maxPeerCount" yaml:"maxPeerCount"`
+	MemberOnlyRead    bool   `json:"memberOnlyRead" yaml:"memberOnlyRead"`
+	Name              string `json:"name" yaml:"name"`
+	Policy            string `json:"policy" yaml:"policy"`
+	RequiredPeerCount int32  `json:"requiredPeerCount" yaml:"requiredPeerCount"`
 }
 
 // ChaincodeEvent contains the data for a chaincode event.

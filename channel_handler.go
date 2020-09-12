@@ -101,12 +101,12 @@ func (chn *channelHandlerClient) registerChaincodeEvent(chaincodeID, eventFilter
 	defer chn.mutex.Unlock()
 
 	if _, ok := chn.chaincodeEvents[eventFilter]; ok {
-		return nil, fmt.Errorf("event filter (%s) already registered", eventFilter)
+		return nil, fmt.Errorf("event filter '%s' already registered", eventFilter)
 	}
 
 	registration, ch, err := chn.eventManager.RegisterChaincodeEvent(chaincodeID, eventFilter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register chaincode event (%s) on chaincode '%s': %w", eventFilter, chaincodeID, err)
+		return nil, fmt.Errorf("failed to register chaincode event '%s' for chaincode '%s': %w", eventFilter, chaincodeID, err)
 	}
 
 	stopChan := make(chan chan struct{})

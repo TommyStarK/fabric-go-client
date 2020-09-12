@@ -79,6 +79,7 @@ func TestChaincodeOperations(t *testing.T) {
 	queryBlockByHash(t, org1client)
 	registerChaincodeEvent(t, org1client)
 	chaincodeEventTimeout(t, org1client)
+	chaincodePrivateDataCollection(t, org1client)
 	chaincodeOpsFailureCases(t, org1client)
 	testConvertChaincodeRequest(t)
 }

@@ -20,3 +20,10 @@ chaincodes:
     version: 1.0
     initArgs:
       - init
+    collections:
+      - name: dummy
+        memberOnlyRead: false
+        policy: OR('Org1MSP.peer')
+        blockToLive: 0
+        requiredPeerCount: 0
+        maxPeerCount: 0

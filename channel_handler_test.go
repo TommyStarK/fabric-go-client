@@ -171,20 +171,61 @@ func chaincodeEventTimeout(t *testing.T, client *Client) {
 	client.UnregisterChaincodeEvent("foo")
 }
 
+func chaincodePrivateDataCollection(t *testing.T, client *Client) {
+	req := &ChaincodeRequest{
+		ChaincodeID: client.Config().Chaincodes[0].Name,
+		Function:    "storePrivateData",
+		TransientMap: map[string][]byte{
+			"test": []byte("this is a test"),
+		},
+	}
+
+	if _, err := client.Invoke(req, WithOrdererResponseTimeout(2*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+
+	req = &ChaincodeRequest{
+		ChaincodeID: client.Config().Chaincodes[0].Name,
+		Function:    "queryPrivateData",
+		Args:        []string{"test"},
+	}
+
+	res, err := client.Query(req, WithOrdererResponseTimeout(2*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Status != 200 {
+		t.Fail()
+	}
+
+	if len(res.TransactionID) == 0 {
+		t.Fail()
+	}
+
+	if string(res.Payload) != "this is a test" {
+		t.Fail()
+	}
+}
+
 func chaincodeOpsFailureCases(t *testing.T, client *Client) {
-	if _, err := client.Invoke(nil); err == nil {
+	req := &ChaincodeRequest{
+		ChaincodeID: client.Config().Chaincodes[0].Name,
+	}
+
+	if _, err := client.Invoke(req); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Invoke(nil, WithChannelContext("dummy")); err == nil {
+	if _, err := client.Invoke(req, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Query(nil); err == nil {
+	if _, err := client.Query(req); err == nil {
 		t.Fail()
 	}
 
-	if _, err := client.Query(nil, WithChannelContext("dummy")); err == nil {
+	if _, err := client.Query(req, WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
@@ -193,6 +234,22 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 	}
 
 	if _, err := client.QueryBlockByTxID("dummy", WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlock(0, WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByHash(nil); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryBlockByHash(nil, WithChannelContext("dummy")); err == nil {
+		t.Fail()
+	}
+
+	if _, err := client.QueryInfo(WithChannelContext("dummy")); err == nil {
 		t.Fail()
 	}
 
