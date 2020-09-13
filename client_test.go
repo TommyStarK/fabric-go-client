@@ -104,6 +104,12 @@ func TestChaincodeOperations(t *testing.T) {
 	testConvertChaincodeRequest(t)
 }
 
+func TestGatewayWrapping(t *testing.T) {
+	testWalletCapabilities(t, org1client.Config())
+	testGatewayCapabilities(t, org1client.Config())
+	cleanAfterGatewayTests(t, org1client.Config())
+}
+
 func TestCloseClient(t *testing.T) {
 	org1client.Close()
 	org2client.Close()
