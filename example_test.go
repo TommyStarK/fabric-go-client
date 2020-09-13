@@ -1,12 +1,13 @@
 package fabclient
 
 import (
+	"io/ioutil"
 	"log"
 	"time"
 )
 
 func Example() {
-	client, err := NewClientFromConfigFile("./testdata/client/client-config.yaml")
+	client, err := NewClientFromConfigFile("./testdata/organizations/org1/client-config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,4 +77,49 @@ func Example() {
 	log.Printf("query content: %s", string(queryResult.Payload))
 
 	// using Gateway
+	user := client.Config().Identities.Users[0]
+
+	cert, err := ioutil.ReadFile(user.Certificate)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pk, err := ioutil.ReadFile(user.PrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	id := NewWalletX509Identity("Org1MSP", string(cert), string(pk))
+
+	w, err := NewFileSystemWallet("./testdata/test-wallet")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := w.Put(user.Username, id); err != nil {
+		log.Fatal(err)
+	}
+
+	gtw, err := Connect(WithConfigFromFile(client.Config().ConnectionProfile), WithIdentity(w, user.Username))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	network, err := gtw.GetNetwork(channel.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	contract := network.GetContract(chaincode.Name)
+
+	if _, err := contract.SubmitTransaction("Store", []string{"gateway-asset-test", `{"content": "this is another content test"}`}); err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := contract.EvaluateTransaction("Query", []string{"gateway-asset-test"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println(string(result))
 }
