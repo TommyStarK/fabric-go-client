@@ -19,11 +19,7 @@ func org1CreateUpdateAndJoinChannel(t *testing.T, client *Client) {
 		t.Fatal(err)
 	}
 
-	if err = client.JoinChannel(channel.Name); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = client.JoinChannel(channel.Name); err != nil {
+	if err := client.JoinChannel(channel.Name); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -35,11 +31,7 @@ func org2UpdateAndJoinChannel(t *testing.T, client *Client) {
 		t.Fatal(err)
 	}
 
-	if err = client.JoinChannel(channel.Name); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = client.JoinChannel(channel.Name); err != nil {
+	if err := client.JoinChannel(channel.Name); err != nil {
 		t.Fatal(err)
 	}
 }
