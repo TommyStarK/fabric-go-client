@@ -22,6 +22,14 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestMembershipServiceProvider(t *testing.T) {
+	if _, err := org1client.msp.createSigningIdentity("", ""); err == nil {
+		t.Error("should have failed to create signing identity: invalid certificate")
+	}
+
+	if _, err := org1client.msp.createSigningIdentity(org1client.Config().Identities.Admin.Certificate, ""); err == nil {
+		t.Error("should have failed to create signing identity: invalid private key")
+	}
+
 	testMembershipServiceProvider(t, org1client.msp, org1client.Config())
 }
 
@@ -36,32 +44,32 @@ func TestChannelResourceManagement(t *testing.T) {
 
 	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"))
 	if err != nil || handler == nil {
-		t.Fail()
+		t.Error("should have succeed to select channel handler for channel: channelall")
 	}
 
 	handler, err = org1client.selectChannelHandler(WithUserContext("User1"))
 	if err != nil || handler == nil {
-		t.Fail()
+		t.Error("should have succeed to select channel handler for user: User1")
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("User1"))
 	if err != nil || handler == nil {
-		t.Fail()
+		t.Error("should have succeed to select channel handler for channel: channelall and user: User1")
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelContext("dummy"))
 	if err == nil || handler != nil {
-		t.Fail()
+		t.Error("should have returned an error when selecting channel handler for channel: dummy")
 	}
 
 	handler, err = org1client.selectChannelHandler(WithUserContext("foo"))
 	if err == nil || handler != nil {
-		t.Fail()
+		t.Error("should have returned an error when selecting channel handler for user: foo")
 	}
 
 	handler, err = org1client.selectChannelHandler(WithChannelContext("channelall"), WithUserContext("foo"))
 	if err == nil || handler != nil {
-		t.Fail()
+		t.Error("should have returned an error when selecting channel handler for user: foo")
 	}
 }
 
@@ -81,6 +89,7 @@ func TestChaincodeOperations(t *testing.T) {
 	chaincodeEventTimeout(t, org1client)
 	chaincodePrivateDataCollection(t, org1client)
 	chaincodeOpsFailureCases(t, org1client)
+	testConvertBlockchainInfo(t)
 	testConvertChaincodeRequest(t)
 }
 
