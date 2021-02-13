@@ -6,7 +6,7 @@ export COMPOSE_PROJECT_NAME=fabclient_${BUILD_NUMBER}
 docker build . -t fabclient;
 
 docker-compose -f testdata/hyperledger-fabric-network/docker-compose.yaml --project-name $COMPOSE_PROJECT_NAME up -d orderer.dummy.com peer0.org1.dummy.com;
-sleep 5;
+sleep 10;
 
 check=$(docker ps -aq -f status=exited | wc -l);
 check=${check##*( )};
