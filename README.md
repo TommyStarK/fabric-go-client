@@ -10,7 +10,7 @@ The aim of this client is to facilitate the development of solutions that intera
 
 It is a wrapper around the fabric-sdk-go. The client has been designed for being able to manage multiple channels and interact with multiple chaincodes.
 
-This version is built to be compliant with Hyperledger Fabric [v1.4](https://hyperledger-fabric.readthedocs.io/en/release-1.4/whatsnew.html). It uses the legacy chaincode lifecycle.
+This version is built to be compliant with Hyperledger Fabric v1.4. It uses the legacy chaincode lifecycle.
 
 If you wish to use the new chaincode lifecyle as well as the gateway programming model, please take a look at [this version](https://github.com/TommyStarK/fabric-go-client) of the client.
 
