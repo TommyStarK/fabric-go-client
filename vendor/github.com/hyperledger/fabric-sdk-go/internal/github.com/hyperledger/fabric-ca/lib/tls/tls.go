@@ -27,9 +27,9 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/util"
 	factory "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
 	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
 	"github.com/pkg/errors"
 )
 
@@ -82,7 +82,12 @@ func GetClientTLSConfig(cfg *ClientTLSConfig, csp core.CryptoSuite) (*tls.Config
 	}
 	rootCAPool := cfg.TlsCertPool
 	if rootCAPool == nil {
-		rootCAPool = x509.NewCertPool()
+		rootCAPool, err := x509.SystemCertPool()
+		if err != nil {
+			log.Debugf("Failed to load system cert pool, switching to empty cert pool ")
+			rootCAPool = x509.NewCertPool()
+		}
+
 		if len(cfg.CertFiles) == 0 {
 			return nil, errors.New("No trusted root certificates for TLS were provided")
 		}

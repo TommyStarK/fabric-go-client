@@ -14,7 +14,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-protos-go/gossip"
 	"github.com/hyperledger/fabric-protos-go/msp"
 )
@@ -100,15 +100,13 @@ func formatDigests(msgType gossip.PullMsgType, givenDigests [][]byte) []string {
 
 // DataDigestToString prints nonce, msg_type and digests
 func DataDigestToString(dig *gossip.DataDigest) string {
-	var digests []string
-	digests = formatDigests(dig.MsgType, dig.Digests)
+	digests := formatDigests(dig.MsgType, dig.Digests)
 	return fmt.Sprintf("data_dig: nonce: %d , Msg_type: %s, digests: %v", dig.Nonce, dig.MsgType, digests)
 }
 
 // DataRequestToString prints nonce, msg_type and digests
 func DataRequestToString(dataReq *gossip.DataRequest) string {
-	var digests []string
-	digests = formatDigests(dataReq.MsgType, dataReq.Digests)
+	digests := formatDigests(dataReq.MsgType, dataReq.Digests)
 	return fmt.Sprintf("data request: nonce: %d , Msg_type: %s, digests: %v", dataReq.Nonce, dataReq.MsgType, digests)
 }
 

@@ -8,6 +8,7 @@ package invoke
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -56,7 +57,7 @@ func (e *EndorsementHandler) Handle(requestContext *RequestContext, clientContex
 	requestContext.Response.TransactionID = proposal.TxnID // TODO: still needed?
 
 	if err != nil {
-		requestContext.Error = err
+		requestContext.Error = checkEndorserServerError(err)
 		return
 	}
 
@@ -281,6 +282,7 @@ func createAndSendTransactionProposal(transactor fab.ProposalSender, chrequest *
 		Fcn:          chrequest.Fcn,
 		Args:         chrequest.Args,
 		TransientMap: chrequest.TransientMap,
+		IsInit:       chrequest.IsInit,
 	}
 
 	txh, err := transactor.CreateTransactionHeader(opts...)
@@ -296,4 +298,12 @@ func createAndSendTransactionProposal(transactor fab.ProposalSender, chrequest *
 	transactionProposalResponses, err := transactor.SendTransactionProposal(proposal, targets)
 
 	return transactionProposalResponses, proposal, err
+}
+
+func checkEndorserServerError(err error) error {
+	if strings.Contains(err.Error(), "failed to distribute private collection") {
+		return status.New(status.EndorserServerStatus, status.PvtDataDisseminationFailed.ToInt32(), err.Error(), nil)
+	}
+
+	return err
 }

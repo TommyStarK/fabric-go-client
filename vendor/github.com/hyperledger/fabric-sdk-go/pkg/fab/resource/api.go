@@ -9,6 +9,8 @@ package resource
 import (
 	common "github.com/hyperledger/fabric-protos-go/common"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
+	lb "github.com/hyperledger/fabric-protos-go/peer/lifecycle"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 )
 
@@ -55,4 +57,52 @@ type JoinChannelRequest struct {
 type CCPackage struct {
 	Type pb.ChaincodeSpec_Type
 	Code []byte
+}
+
+// LifecycleInstallProposalResponse is the response from an install proposal request
+type LifecycleInstallProposalResponse struct {
+	*fab.TransactionProposalResponse
+	*lb.InstallChaincodeResult
+}
+
+// CCReference contains the name and version of an instantiated chaincode that
+// references the installed chaincode package.
+type CCReference struct {
+	Name    string
+	Version string
+}
+
+// LifecycleInstalledCC contains the package ID and label of the installed chaincode,
+// including a map of channel name to chaincode name and version
+// pairs of chaincode definitions that reference this chaincode package.
+type LifecycleInstalledCC struct {
+	PackageID  string
+	Label      string
+	References map[string][]CCReference
+}
+
+// LifecycleQueryInstalledCCResponse contains the response for a LifecycleQueryInstalledCC request.
+type LifecycleQueryInstalledCCResponse struct {
+	*fab.TransactionProposalResponse
+	InstalledChaincodes []LifecycleInstalledCC
+}
+
+// LifecycleQueryApprovedCCResponse contains the response for a LifecycleQueryApprovedCC request
+type LifecycleQueryApprovedCCResponse struct {
+	*fab.TransactionProposalResponse
+	ApprovedChaincode *LifecycleApprovedCC
+}
+
+// LifecycleApprovedCC contains information about an approved chaincode
+type LifecycleApprovedCC struct {
+	Name                string
+	Version             string
+	Sequence            int64
+	EndorsementPlugin   string
+	ValidationPlugin    string
+	SignaturePolicy     *common.SignaturePolicyEnvelope
+	ChannelConfigPolicy string
+	CollectionConfig    []*pb.CollectionConfig
+	InitRequired        bool
+	PackageID           string
 }

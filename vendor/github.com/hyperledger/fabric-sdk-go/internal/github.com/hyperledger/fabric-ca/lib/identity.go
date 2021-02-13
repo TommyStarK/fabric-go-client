@@ -15,14 +15,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/api"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/client/credential/x509"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/lib/common"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/api"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkinternal/pkg/util"
 	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/util"
 	"github.com/pkg/errors"
 )
 
@@ -113,7 +111,7 @@ func (i *Identity) Reenroll(req *api.ReenrollmentRequest) (*EnrollmentResponse, 
 	if err != nil {
 		return nil, err
 	}
-	var result common.EnrollmentResponseNet
+	var result api.EnrollmentResponseNet
 	err = i.Post("reenroll", body, &result, nil)
 	if err != nil {
 		return nil, err
@@ -430,18 +428,11 @@ func (i *Identity) Post(endpoint string, reqBody []byte, result interface{}, que
 }
 
 func (i *Identity) addTokenAuthHdr(req *http.Request, body []byte) error {
-	// TODO remove the below compatibility logic once Fabric CA v1.3 is not supported by the SDK anymore
-	caVer, e := i.client.GetFabCAVersion()
-	if e != nil {
-		return errors.WithMessage(e, "Failed to add token authorization header because client is unable to fetch the Fabric CA version")
-	}
-	compatibility := isCompatibleFabCA(caVer)
-
 	log.Debug("Adding token-based authorization header")
 	var token string
 	var err error
 	for _, cred := range i.creds {
-		token, err = cred.CreateToken(req, body, compatibility)
+		token, err = cred.CreateToken(req, body)
 		if err != nil {
 			return errors.WithMessage(err, "Failed to add token authorization header")
 		}
@@ -449,30 +440,4 @@ func (i *Identity) addTokenAuthHdr(req *http.Request, body []byte) error {
 	}
 	req.Header.Set("authorization", token)
 	return nil
-}
-
-// TODO remove the function below once Fabric CA v1.3 is not supported by the SDK anymore
-func isCompatibleFabCA(caVersion string) bool {
-	versions := strings.Split(caVersion, ".")
-	// 1.0-1.3 -> set Compatible CA to true, otherwise (1.4 and above) set false
-	if len(versions) > 1 {
-		majv, e := strconv.Atoi(versions[0])
-		if e != nil {
-			log.Debugf("Fabric CA version retrieval format returned error, will not use Compatible Fabric CA setup in the client: %s", e)
-			return false
-		}
-		if majv == 0 {
-			return true
-		}
-
-		minv, e := strconv.Atoi(versions[1])
-		if e != nil {
-			log.Debugf("Fabric CA version retrieval format returned error, will not use Compatible Fabric CA setup in the client: %s", e)
-			return false
-		}
-		if majv == 1 && minv < 4 {
-			return true
-		}
-	}
-	return false
 }
