@@ -18,7 +18,7 @@ func testMembershipServiceProvider(t *testing.T, msp membershipServiceProvider, 
 	}
 
 	if _, err := msp.getSigningIdentity("foo"); err == nil {
-		t.Fail()
+		t.Error("should have failed as we required an identity which does not exist")
 	}
 
 }

@@ -75,7 +75,7 @@ func queryInfo(t *testing.T, client *Client) {
 	}
 
 	if info.Height != 5 {
-		t.Fail()
+		t.Error("Height should equal 5")
 	}
 
 	blockHash = info.PreviousBlockHash
@@ -137,7 +137,7 @@ func registerChaincodeEvent(t *testing.T, client *Client) {
 
 	success := <-done
 	if !success {
-		t.Fail()
+		t.Error("should have detected the chaincode event")
 	}
 
 	close(done)
@@ -164,7 +164,7 @@ func chaincodeEventTimeout(t *testing.T, client *Client) {
 
 	res := <-ch
 	if res {
-		t.Fail()
+		t.Error("should have timed out when waiting for chaincode event")
 	}
 
 	close(ch)
@@ -196,15 +196,15 @@ func chaincodePrivateDataCollection(t *testing.T, client *Client) {
 	}
 
 	if res.Status != 200 {
-		t.Fail()
+		t.Error("transaction status should equal 200")
 	}
 
 	if len(res.TransactionID) == 0 {
-		t.Fail()
+		t.Error("TransactionID should not be empty")
 	}
 
 	if string(res.Payload) != "this is a test" {
-		t.Fail()
+		t.Error("payload should equal 'this is a test'")
 	}
 }
 
@@ -214,51 +214,51 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 	}
 
 	if _, err := client.Invoke(req); err == nil {
-		t.Fail()
+		t.Errorf("should have returned an error when invoking chaincode %+v", req)
 	}
 
 	if _, err := client.Invoke(req, WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when invoking chaincode: invalid channel context (dummy)")
 	}
 
 	if _, err := client.Query(req); err == nil {
-		t.Fail()
+		t.Errorf("should have returned an error when querying chaincode %+v", req)
 	}
 
 	if _, err := client.Query(req, WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when querying chaincode: invalid channel context (dummy)")
 	}
 
 	if _, err := client.QueryBlockByTxID("dummy"); err == nil {
-		t.Fail()
+		t.Error("should have failed to query block by TxID: invalid id (dummy)")
 	}
 
 	if _, err := client.QueryBlockByTxID("dummy", WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when querying block by TxID: invalid channel context (dummy)")
 	}
 
 	if _, err := client.QueryBlock(0, WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when querying block by TxID: invalid channel context (dummy)")
 	}
 
 	if _, err := client.QueryBlockByHash(nil); err == nil {
-		t.Fail()
+		t.Error("should have failed to query block by hash: invalid hash (nil)")
 	}
 
 	if _, err := client.QueryBlockByHash(nil, WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when querying block by hash: invalid channel context (dummy)")
 	}
 
 	if _, err := client.QueryInfo(WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when querying info: invalid channel context (dummy)")
 	}
 
 	if _, err := client.RegisterChaincodeEvent("dummy", "dummy", WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when registering chaincode event: invalid channel context (dummy)")
 	}
 
 	if err := client.UnregisterChaincodeEvent("dummy", WithChannelContext("dummy")); err == nil {
-		t.Fail()
+		t.Error("should have returned an error when unregistering chaincode event: invalid channel context (dummy)")
 	}
 
 	if _, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "eventFilter"); err != nil {
@@ -266,7 +266,7 @@ func chaincodeOpsFailureCases(t *testing.T, client *Client) {
 	}
 
 	if _, err := client.RegisterChaincodeEvent(client.Config().Chaincodes[0].Name, "eventFilter"); err == nil {
-		t.Fail()
+		t.Errorf("should have returned an error when registering chaincode event: chaincode %s does not exist", client.Config().Chaincodes[0].Name)
 	}
 
 	if err := client.UnregisterChaincodeEvent("eventFilter"); err != nil {

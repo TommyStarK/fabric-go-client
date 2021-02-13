@@ -98,6 +98,12 @@ func chaincodeManagementFailureCases(t *testing.T, client *Client) {
 	}
 }
 
+func testConvertBlockchainInfo(t *testing.T) {
+	if bci := convertBlockchainInfo(nil); bci != nil {
+		t.Error("blockchain info should be nil")
+	}
+}
+
 func testConvertChaincodeRequest(t *testing.T) {
 	req := &ChaincodeRequest{
 		ChaincodeID: "",
@@ -113,6 +119,8 @@ func testConvertChaincodeRequest(t *testing.T) {
 
 	r := convertChaincodeRequest(req)
 	if r.InvocationChain[0].ID != "test" {
-		t.Fail()
+		t.Error("ID of InvocationChain should equal 'test'")
 	}
+
+	r = convertChaincodeRequest(nil)
 }
