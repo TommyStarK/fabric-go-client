@@ -23,7 +23,7 @@ Each Contribution is welcomed and encouraged. I do not claim to cover each use c
 ## Usage
 
 ```bash
-❯ go get github.com/TommyStarK/fabric-go-client@v1.0.0-hlf-2.3
+❯ go get github.com/TommyStarK/fabric-go-client@v2.3
 ```
 
 You will find an example of how to instantiate and use the client [here](https://github.com/TommyStarK/fabric-go-client/blob/master/example_test.go). An example of how to configure the client is also available [here](https://github.com/TommyStarK/fabric-go-client/blob/master/testdata/organizations/org1/client-config.yaml).
