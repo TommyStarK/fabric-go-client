@@ -71,7 +71,7 @@ func org1InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be approved on channel '%s'", chaincode.Name, channel.Name)
 	}
 
-	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, chaincode)
+	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincode)
 	if err != nil {
 		t.Errorf("chaincode '%s' should be ready to be committed on channel '%s'", chaincode.Name, channel.Name)
 	}
@@ -103,7 +103,7 @@ func org2InstallAndApproveChaincodeContractAPI(t *testing.T, client *Client) {
 		t.Errorf("chaincode '%s' should be approved on channel '%s'", chaincode.Name, channel.Name)
 	}
 
-	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincodeInitialVersionPackageID, chaincode)
+	res, err := client.LifecyleCheckChaincodeCommitReadiness(channel.Name, chaincode)
 	if err != nil {
 		t.Errorf("chaincode '%s' should be ready to be committed on channel '%s'", chaincode.Name, channel.Name)
 	}

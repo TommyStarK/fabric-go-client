@@ -193,8 +193,8 @@ func (client *Client) LifecycleApproveChaincode(channelID, packageID string, cha
 }
 
 // LifecyleCheckChaincodeCommitReadiness checks the 'commit readiness' of a chaincode. Returns a map holding the org approvals.
-func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error) {
-	return client.resourceManager.lifecycleCheckChaincodeCommitReadiness(channelID, packageID, chaincode)
+func (client *Client) LifecyleCheckChaincodeCommitReadiness(channelID string, chaincode Chaincode) (map[string]bool, error) {
+	return client.resourceManager.lifecycleCheckChaincodeCommitReadiness(channelID, chaincode)
 }
 
 // LifecycleCommitChaincode commits the chaincode to the given channel.

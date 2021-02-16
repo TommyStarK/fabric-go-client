@@ -25,7 +25,7 @@ type resourceManager interface {
 	joinChannel(channelID string) error
 	lifecycleInstallChaincode(chaincode Chaincode) (string, error)
 	lifecycleApproveChaincode(channelID, packageID string, chaincode Chaincode) error
-	lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error)
+	lifecycleCheckChaincodeCommitReadiness(channelID string, chaincode Chaincode) (map[string]bool, error)
 	lifecycleCommitChaincode(channelID string, chaincode Chaincode) error
 	isChaincodeInstalled(packageID string) bool
 	isChaincodeApproved(channelID, chaincodeName string, sequence int64) bool
@@ -183,11 +183,10 @@ func (rsm *resourceManagementClient) lifecycleApproveChaincode(channelID, packag
 	return nil
 }
 
-func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID, packageID string, chaincode Chaincode) (map[string]bool, error) {
+func (rsm *resourceManagementClient) lifecycleCheckChaincodeCommitReadiness(channelID string, chaincode Chaincode) (map[string]bool, error) {
 	request := resmgmt.LifecycleCheckCCCommitReadinessRequest{
 		Name:              chaincode.Name,
 		Version:           chaincode.Version,
-		PackageID:         packageID,
 		EndorsementPlugin: "escc",
 		ValidationPlugin:  "vscc",
 		SignaturePolicy:   generateChaincodePolicy(chaincode),
