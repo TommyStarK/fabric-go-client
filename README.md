@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/TommyStarK/fabric-go-client.svg?branch=master)](https://travis-ci.org/TommyStarK/fabric-go-client)
 [![codecov](https://codecov.io/gh/TommyStarK/fabric-go-client/branch/master/graph/badge.svg)](https://codecov.io/gh/TommyStarK/fabric-go-client)
 [![Go Report Card](https://goreportcard.com/badge/github.com/TommyStarK/fabric-go-client)](https://goreportcard.com/report/github.com/TommyStarK/fabric-go-client)
-[![GoDoc](https://godoc.org/github.com/TommyStarK/fabric-go-client?status.svg)](https://pkg.go.dev/github.com/TommyStarK/fabric-go-client@v2.3.0?tab=doc)
+[![GoDoc](https://godoc.org/github.com/TommyStarK/fabric-go-client-v2?status.svg)](https://pkg.go.dev/github.com/TommyStarK/fabric-go-client-v2@v2.3.0?tab=doc)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 The aim of this client is to facilitate the development of solutions that interact with [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io/en/release-2.3/) thanks to the [fabric-sdk-go](https://github.com/hyperledger/fabric-sdk-go).
@@ -23,7 +23,7 @@ Each Contribution is welcomed and encouraged. I do not claim to cover each use c
 ## Usage
 
 ```bash
-❯ go get github.com/TommyStarK/fabric-go-client@v2.3.0
+❯ go get github.com/TommyStarK/fabric-go-client-v2@v2.3.0
 ```
 
 You will find an example of how to instantiate and use the client [here](https://github.com/TommyStarK/fabric-go-client/blob/master/example_test.go). An example of how to configure the client is also available [here](https://github.com/TommyStarK/fabric-go-client/blob/master/testdata/organizations/org1/client-config.yaml).
