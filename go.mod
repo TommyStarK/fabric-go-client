@@ -1,4 +1,4 @@
-module github.com/TommyStarK/fabric-go-client-v2
+module github.com/TommyStarK/fabric-go-client
 
 go 1.15
 
