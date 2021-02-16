@@ -73,8 +73,8 @@ github.com/hyperledger/fabric-lib-go v1.0.0/go.mod h1:H362nMlunurmHwkYqR5uHL2UDW
 github.com/hyperledger/fabric-protos-go v0.0.0-20200424173316-dd554ba3746e/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23 h1:SEbB3yH4ISTGRifDamYXAst36gO2kM855ndMJlsv+pc=
 github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
-github.com/hyperledger/fabric-sdk-go v1.0.0-beta3 h1:A/hog3Eqz2w3daj5WM99JDDI8KfJFPhw0sKttp1TMc4=
-github.com/hyperledger/fabric-sdk-go v1.0.0-beta3/go.mod h1:qWE9Syfg1KbwNjtILk70bJLilnmCvllIYFCSY/pa1RU=
+github.com/hyperledger/fabric-sdk-go v1.0.0 h1:NRu0iNbHV6u4nd9jgYghAdA1Ll4g0Sri4hwMEGiTbyg=
+github.com/hyperledger/fabric-sdk-go v1.0.0/go.mod h1:qWE9Syfg1KbwNjtILk70bJLilnmCvllIYFCSY/pa1RU=
 github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric v0.0.0-20190822125948-d2b42602e52e h1:xVhcr3hNlAtnVO+2OlEQEL+5ZiQbGfKFi+KeYBeMKWo=
 github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric v0.0.0-20190822125948-d2b42602e52e/go.mod h1:yzDA0nf/SiINYnTVcFKQvPM212O1BVriPF2XZLZybbg=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
