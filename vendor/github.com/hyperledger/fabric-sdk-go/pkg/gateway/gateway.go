@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 // Package gateway enables Go developers to build client applications using the Hyperledger
 // Fabric programming model as described in the 'Developing Applications' chapter of the Fabric
-// documentation: https://hyperledger-fabric.readthedocs.io/en/master/developapps/developing_applications.html
+// documentation: https://hyperledger-fabric.readthedocs.io/en/latest/developapps/developing_applications.html
 //
 // A Gateway object is created using the Connect() function to connect to a 'gateway' peer
 // as specified in a network configuration file, using an identity stored in a wallet.
@@ -312,35 +312,26 @@ entityMatchers:
       urlSubstitutionExp: localhost:${2}
       sslTargetOverrideUrlSubstitutionExp: ${1}
       mappedHost: ${1}
-  peer:
+  orderer:
     - pattern: ([^:]+):(\\d+)
       urlSubstitutionExp: localhost:${2}
-      sslTargetOverrideUrlSubstitutionExp: localhost
+      sslTargetOverrideUrlSubstitutionExp: ${1}
       mappedHost: ${1}
 */
 func createLocalhostMappings() map[string][]map[string]string {
 	matchers := make(map[string][]map[string]string)
-	peerMappings := make([]map[string]string, 0)
-	ordererMappings := make([]map[string]string, 0)
-	mappedHost := "${1}"
+	mappings := make([]map[string]string, 0)
 
-	peerMapping := make(map[string]string)
-	peerMapping["pattern"] = "([^:]+):(\\d+)"
-	peerMapping["urlSubstitutionExp"] = "localhost:${2}"
-	peerMapping["sslTargetOverrideUrlSubstitutionExp"] = mappedHost
-	peerMapping["mappedHost"] = mappedHost
-	peerMappings = append(peerMappings, peerMapping)
+	mapping := make(map[string]string)
+	mapping["pattern"] = "([^:]+):(\\d+)"
+	mapping["urlSubstitutionExp"] = "localhost:${2}"
+	mapping["sslTargetOverrideUrlSubstitutionExp"] = "${1}"
+	mapping["mappedHost"] = "${1}"
+	mappings = append(mappings, mapping)
 
-	matchers["peer"] = peerMappings
+	matchers["peer"] = mappings
+	matchers["orderer"] = mappings
 
-	ordererMapping := make(map[string]string)
-	ordererMapping["pattern"] = "([^:]+):(\\d+)"
-	ordererMapping["urlSubstitutionExp"] = "localhost:${2}"
-	ordererMapping["sslTargetOverrideUrlSubstitutionExp"] = "localhost"
-	ordererMapping["mappedHost"] = mappedHost
-	ordererMappings = append(ordererMappings, ordererMapping)
-
-	matchers["orderer"] = ordererMappings
 	return matchers
 }
 

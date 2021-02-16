@@ -97,6 +97,7 @@ var DefaultRetryableCodes = map[status.Group][]status.Code{
 // transient by fabric-sdk-go/pkg/client/resmgmt.Client
 var ResMgmtDefaultRetryableCodes = map[status.Group][]status.Code{
 	status.EndorserClientStatus: {
+		status.ConnectionFailed,
 		status.EndorsementMismatch,
 		status.ChaincodeNameNotFound,
 	},
@@ -134,6 +135,7 @@ var ChannelClientRetryableCodes = map[status.Group][]status.Code{
 	status.EndorserServerStatus: {
 		status.Code(common.Status_SERVICE_UNAVAILABLE),
 		status.Code(common.Status_INTERNAL_SERVER_ERROR),
+		status.PvtDataDisseminationFailed,
 	},
 	status.OrdererClientStatus: {
 		status.ConnectionFailed,

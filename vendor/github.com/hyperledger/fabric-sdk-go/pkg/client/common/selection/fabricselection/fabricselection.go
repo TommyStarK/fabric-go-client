@@ -243,6 +243,7 @@ func (s *Service) query(req *fabdiscovery.Request, chaincodes []*fab.ChaincodeCa
 	invocChain := asInvocationChain(chaincodes)
 
 	var respErrors []error
+	var discErrs []DiscoveryError
 
 	for response := range responses {
 		logger.Debugf("Checking response from [%s]...", response.Target())
@@ -259,16 +260,7 @@ func (s *Service) query(req *fabdiscovery.Request, chaincodes []*fab.ChaincodeCa
 		if _, err := chResp.Endorsers(invocChain, discclient.NoFilter); err != nil {
 			logger.Debugf("... got error response from [%s]: %s", response.Target(), err)
 
-			if discoveryErr := newDiscoveryError(err); discoveryErr.IsTransient() {
-				logger.Debugf("Got transient error: %s", discoveryErr)
-				errMsg := fmt.Sprintf("error received from Discovery Server: %s", discoveryErr)
-
-				return nil, status.New(status.DiscoveryServerStatus, int32(status.QueryEndorsers), errMsg, []interface{}{})
-			} else if discoveryErr.IsAccessDenied() {
-				logger.Debugf("Got access denied from target [%s]: %s", response.Target(), discoveryErr)
-			}
-
-			respErrors = append(respErrors, err)
+			discErrs = append(discErrs, newDiscoveryError(err))
 			continue
 		}
 
@@ -278,6 +270,17 @@ func (s *Service) query(req *fabdiscovery.Request, chaincodes []*fab.ChaincodeCa
 		cancel()
 
 		return chResp, nil
+	}
+
+	for _, e := range discErrs {
+		if e.IsTransient() {
+			logger.Debugf("Got transient error: %s", e)
+			errMsg := fmt.Sprintf("error received from Discovery Server: %s", e)
+			return nil, status.New(status.DiscoveryServerStatus, int32(status.QueryEndorsers), errMsg, []interface{}{})
+		}
+
+		logger.Debugf("Got non-transient error: %s", e)
+		respErrors = append(respErrors, e)
 	}
 
 	return nil, errors.Wrap(multi.New(respErrors...), "no successful response received from any peer")
@@ -334,14 +337,17 @@ func asPeer(ctx contextAPI.Client, endpoint *discclient.Peer) (fab.Peer, error) 
 		return nil, errors.Errorf("peer config not found for [%s]", url)
 	}
 
-	peer, err := ctx.InfraProvider().CreatePeerFromConfig(&fab.NetworkPeer{PeerConfig: *peerConfig, MSPID: endpoint.MSPID})
+	peer, err := ctx.InfraProvider().CreatePeerFromConfig(&fab.NetworkPeer{
+		PeerConfig: *peerConfig,
+		MSPID:      endpoint.MSPID,
+		Properties: fabdiscovery.GetProperties(endpoint),
+	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to create peer config for [%s]", url)
 	}
 
 	return &peerEndpoint{
-		Peer:        peer,
-		blockHeight: endpoint.StateInfoMessage.GetStateInfo().GetProperties().LedgerHeight,
+		Peer: peer,
 	}, nil
 }
 
@@ -351,11 +357,15 @@ func getDefaultRetryOpts(ctx contextAPI.Client, channelID string) retry.Opts {
 
 type peerEndpoint struct {
 	fab.Peer
-	blockHeight uint64
 }
 
 func (p *peerEndpoint) BlockHeight() uint64 {
-	return p.blockHeight
+	ledgerHeight, ok := p.Properties()[fab.PropertyLedgerHeight]
+	if !ok {
+		return 0
+	}
+
+	return ledgerHeight.(uint64)
 }
 
 // DiscoveryError is an error originating at the Discovery service
